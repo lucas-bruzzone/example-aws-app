@@ -17,6 +17,16 @@ const logoutBtn = document.getElementById('logoutBtn');
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     updateUI();
+    
+    // Verificar se há tokens salvos e se são válidos
+    if (auth.isAuthenticated()) {
+        if (!auth.isTokenValid()) {
+            console.log('Token expirado, fazendo logout automático');
+            auth.signOut();
+            updateUI();
+            showAuthStatus('Sessão expirada. Faça login novamente.', 'error');
+        }
+    }
 });
 
 // Login handler
@@ -26,6 +36,13 @@ loginBtn.addEventListener('click', async () => {
     
     if (!email || !password) {
         showAuthStatus('Por favor, preencha todos os campos.', 'error');
+        return;
+    }
+    
+    // Validação básica de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showAuthStatus('Por favor, insira um email válido.', 'error');
         return;
     }
     
@@ -41,6 +58,13 @@ loginBtn.addEventListener('click', async () => {
         } else if (result.ChallengeName === 'NEW_PASSWORD_REQUIRED') {
             const newPassword = prompt('Digite uma nova senha (mín. 8 chars, maiúscula, minúscula e número):');
             if (newPassword) {
+                // Validação da nova senha
+                const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+                if (!passwordRegex.test(newPassword)) {
+                    showAuthStatus('A nova senha deve ter pelo menos 8 caracteres, incluindo maiúscula, minúscula e número.', 'error');
+                    return;
+                }
+                
                 const finalResult = await auth.respondToNewPasswordRequired(result.Session, newPassword);
                 if (finalResult.AuthenticationResult) {
                     showAuthStatus('Senha alterada e login realizado!', 'success');
@@ -50,7 +74,9 @@ loginBtn.addEventListener('click', async () => {
                 }
             }
         } else {
-            showAuthStatus('Erro no login. Verifique suas credenciais.', 'error');
+            // Tratar diferentes tipos de erro
+            const errorMessage = result.message || result.__type || 'Erro no login. Verifique suas credenciais.';
+            showAuthStatus(`Erro: ${errorMessage}`, 'error');
         }
     } catch (error) {
         console.error('Login error:', error);
@@ -61,10 +87,18 @@ loginBtn.addEventListener('click', async () => {
     }
 });
 
-// Test API handler - CORRIGIDO
+// Test API handler - VERSÃO CORRIGIDA
 testBtn.addEventListener('click', async () => {
     if (!auth.isAuthenticated()) {
         showApiResponse('Erro: Usuário não autenticado. Faça login primeiro.');
+        return;
+    }
+
+    // Verificar se o token ainda é válido
+    if (!auth.isTokenValid()) {
+        showApiResponse('Erro: Token expirado. Faça login novamente.');
+        auth.signOut();
+        updateUI();
         return;
     }
 
@@ -73,18 +107,20 @@ testBtn.addEventListener('click', async () => {
     showApiResponse('Carregando...');
     
     try {
-        // Obter o token de acesso
-        const accessToken = await auth.getAccessToken();
+        // Usar o token da classe auth
+        const token = auth.getToken();
         
-        if (!accessToken) {
+        if (!token) {
             throw new Error('Token de acesso não encontrado');
         }
+        
+        console.log('Enviando requisição com token:', token.substring(0, 20) + '...');
         
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${accessToken}`
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
                 message: 'Teste do site estático',
@@ -93,8 +129,18 @@ testBtn.addEventListener('click', async () => {
             })
         });
         
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+        
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            let errorText;
+            try {
+                const errorData = await response.json();
+                errorText = errorData.message || errorData.error || JSON.stringify(errorData);
+            } catch {
+                errorText = await response.text();
+            }
+            throw new Error(`HTTP ${response.status}: ${response.statusText}\n${errorText}`);
         }
         
         const data = await response.json();
@@ -102,7 +148,15 @@ testBtn.addEventListener('click', async () => {
         
     } catch (error) {
         console.error('API test error:', error);
-        showApiResponse(`Erro: ${error.message}`);
+        
+        // Se for erro 401, pode ser token inválido
+        if (error.message.includes('401')) {
+            showApiResponse('Erro 401: Token inválido ou expirado. Tente fazer login novamente.');
+            auth.signOut();
+            updateUI();
+        } else {
+            showApiResponse(`Erro: ${error.message}`);
+        }
     } finally {
         testBtn.disabled = false;
         testBtn.textContent = 'Testar API';
@@ -113,6 +167,7 @@ testBtn.addEventListener('click', async () => {
 logoutBtn.addEventListener('click', () => {
     auth.signOut();
     clearForm();
+    clearApiResponse();
     updateUI();
     showAuthStatus('Logout realizado com sucesso.', 'success');
 });
@@ -135,12 +190,21 @@ function updateUI() {
     
     if (isAuthenticated) {
         clearAuthStatus();
+    } else {
+        clearApiResponse();
     }
 }
 
 function showAuthStatus(message, type) {
     authStatus.textContent = message;
     authStatus.className = type;
+    
+    // Auto-clear success messages
+    if (type === 'success') {
+        setTimeout(() => {
+            clearAuthStatus();
+        }, 3000);
+    }
 }
 
 function clearAuthStatus() {
@@ -151,6 +215,11 @@ function clearAuthStatus() {
 function showApiResponse(response) {
     apiResponse.textContent = response;
     resultsSection.classList.add('show');
+}
+
+function clearApiResponse() {
+    apiResponse.textContent = '';
+    resultsSection.classList.remove('show');
 }
 
 function clearForm() {

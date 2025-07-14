@@ -15,19 +15,23 @@
         <main>
             <section class="auth" id="authSection">
                 <div class="auth-form">
-                    <h3>Login</h3>
-                    <input type="email" id="email" placeholder="Email" required>
-                    <input type="password" id="password" placeholder="Senha" required>
+                    <h3>Faça seu login</h3>
+                    <div class="form-group">
+                        <input type="email" id="email" placeholder="Digite seu email" required autocomplete="email">
+                        <input type="password" id="password" placeholder="Digite sua senha" required autocomplete="current-password">
+                    </div>
                     <button id="loginBtn">Entrar</button>
                     <div id="authStatus"></div>
                 </div>
             </section>
 
-            <section class="hero" id="heroSection">
+            <section class="hero hidden" id="heroSection">
                 <h2>Bem-vindo!</h2>
-                <p>Este é um site estático hospedado no S3.</p>
-                <button id="testBtn">Testar API</button>
-                <button id="logoutBtn" class="logout-btn">Sair</button>
+                <p>Este é um site estático hospedado no S3 com autenticação AWS Cognito.</p>
+                <div class="btn-group">
+                    <button id="testBtn">Testar API</button>
+                    <button id="logoutBtn" class="logout-btn">Sair</button>
+                </div>
             </section>
             
             <section class="results" id="results">

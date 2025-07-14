@@ -8,6 +8,8 @@ const COGNITO_CONFIG = {
 class CognitoAuth {
     constructor() {
         this.accessToken = localStorage.getItem('accessToken');
+        this.idToken = localStorage.getItem('idToken');
+        this.refreshToken = localStorage.getItem('refreshToken');
         this.currentUsername = null;
     }
 
@@ -60,7 +62,15 @@ class CognitoAuth {
         
         if (data.AuthenticationResult) {
             this.accessToken = data.AuthenticationResult.AccessToken;
+            this.idToken = data.AuthenticationResult.IdToken;
+            this.refreshToken = data.AuthenticationResult.RefreshToken;
+            
+            // Salvar tokens no localStorage
             localStorage.setItem('accessToken', this.accessToken);
+            localStorage.setItem('idToken', this.idToken);
+            localStorage.setItem('refreshToken', this.refreshToken);
+            
+            console.log('Login successful, tokens saved');
         }
         
         return data;
@@ -90,7 +100,13 @@ class CognitoAuth {
         
         if (data.AuthenticationResult) {
             this.accessToken = data.AuthenticationResult.AccessToken;
+            this.idToken = data.AuthenticationResult.IdToken;
+            this.refreshToken = data.AuthenticationResult.RefreshToken;
+            
+            // Salvar tokens no localStorage
             localStorage.setItem('accessToken', this.accessToken);
+            localStorage.setItem('idToken', this.idToken);
+            localStorage.setItem('refreshToken', this.refreshToken);
         }
         
         return data;
@@ -98,19 +114,50 @@ class CognitoAuth {
 
     signOut() {
         this.accessToken = null;
+        this.idToken = null;
+        this.refreshToken = null;
         this.currentUsername = null;
+        
+        // Limpar localStorage
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('idToken');
+        localStorage.removeItem('refreshToken');
+        
+        console.log('User signed out, tokens cleared');
     }
 
     isAuthenticated() {
-        return !!this.accessToken;
+        return !!(this.accessToken || this.idToken);
     }
 
+    // Método para obter o token (preferindo idToken para APIs)
+    getToken() {
+        return this.idToken || this.accessToken;
+    }
+
+    // Método para obter headers de autenticação
     getAuthHeaders() {
+        const token = this.getToken();
         return {
-            'Authorization': `Bearer ${this.accessToken}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
         };
+    }
+
+    // Método para verificar se o token está válido (básico)
+    isTokenValid() {
+        const token = this.getToken();
+        if (!token) return false;
+        
+        try {
+            // Decodificar JWT para verificar expiração
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const now = Math.floor(Date.now() / 1000);
+            return payload.exp > now;
+        } catch (error) {
+            console.error('Erro ao validar token:', error);
+            return false;
+        }
     }
 }
 
