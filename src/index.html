@@ -13,13 +13,24 @@
         </header>
         
         <main>
-            <section class="hero">
+            <section class="auth" id="authSection">
+                <div class="auth-form">
+                    <h3>Login</h3>
+                    <input type="email" id="email" placeholder="Email" required>
+                    <input type="password" id="password" placeholder="Senha" required>
+                    <button id="loginBtn">Entrar</button>
+                    <div id="authStatus"></div>
+                </div>
+            </section>
+
+            <section class="hero" id="heroSection">
                 <h2>Bem-vindo!</h2>
                 <p>Este é um site estático hospedado no S3.</p>
                 <button id="testBtn">Testar API</button>
+                <button id="logoutBtn" class="logout-btn">Sair</button>
             </section>
             
-            <section class="results" id="results" style="display: none;">
+            <section class="results" id="results">
                 <h3>Resultado da API:</h3>
                 <pre id="apiResponse"></pre>
             </section>
