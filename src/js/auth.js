@@ -8,6 +8,7 @@ const COGNITO_CONFIG = {
 class CognitoAuth {
     constructor() {
         this.accessToken = localStorage.getItem('accessToken');
+        this.currentUsername = null;
     }
 
     async signUp(email, password) {
@@ -37,6 +38,7 @@ class CognitoAuth {
 
     async signIn(email, password) {
         const url = `https://cognito-idp.${COGNITO_CONFIG.region}.amazonaws.com/`;
+        this.currentUsername = email;
         
         const response = await fetch(url, {
             method: 'POST',
@@ -78,7 +80,7 @@ class CognitoAuth {
                 ChallengeName: 'NEW_PASSWORD_REQUIRED',
                 Session: session,
                 ChallengeResponses: {
-                    USERNAME: 'test@email.com',
+                    USERNAME: this.currentUsername,
                     NEW_PASSWORD: newPassword
                 }
             })
@@ -96,6 +98,7 @@ class CognitoAuth {
 
     signOut() {
         this.accessToken = null;
+        this.currentUsername = null;
         localStorage.removeItem('accessToken');
     }
 
