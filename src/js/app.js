@@ -75,11 +75,13 @@ testBtn.addEventListener('click', async () => {
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
-            headers: auth.getAuthHeaders(),
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
                 message: 'Teste do site estático',
                 timestamp: new Date().toISOString(),
-                user: emailInput.value
+                user: 'test'
             })
         });
         
