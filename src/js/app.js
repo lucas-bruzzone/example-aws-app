@@ -8,7 +8,7 @@ const authStatus = document.getElementById('authStatus');
 const apiResponse = document.getElementById('apiResponse');
 
 // Form elements
-const emailInput = document.getElementById('email');
+const usernameInput = document.getElementById('email'); // ID mantido como 'email' por compatibilidade
 const passwordInput = document.getElementById('password');
 const loginBtn = document.getElementById('loginBtn');
 const testBtn = document.getElementById('testBtn');
@@ -31,26 +31,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Login handler
 loginBtn.addEventListener('click', async () => {
-    const email = emailInput.value.trim();
+    const username = usernameInput.value.trim();
     const password = passwordInput.value.trim();
     
-    if (!email || !password) {
+    if (!username || !password) {
         showAuthStatus('Por favor, preencha todos os campos.', 'error');
         return;
     }
     
-    // Validação básica de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        showAuthStatus('Por favor, insira um email válido.', 'error');
-        return;
-    }
+    // Campo pode ser email ou username - sem validação específica
     
     loginBtn.disabled = true;
     loginBtn.textContent = 'Entrando...';
     
     try {
-        const result = await auth.signIn(email, password);
+        const result = await auth.signIn(username, password);
         
         if (result.AuthenticationResult) {
             showAuthStatus('Login realizado com sucesso!', 'success');
@@ -173,7 +168,7 @@ logoutBtn.addEventListener('click', () => {
 });
 
 // Enter key support
-emailInput.addEventListener('keypress', (e) => {
+usernameInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') passwordInput.focus();
 });
 
@@ -223,6 +218,6 @@ function clearApiResponse() {
 }
 
 function clearForm() {
-    emailInput.value = '';
+    usernameInput.value = '';
     passwordInput.value = '';
 }

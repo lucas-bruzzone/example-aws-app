@@ -13,7 +13,7 @@ class CognitoAuth {
         this.currentUsername = null;
     }
 
-    async signUp(email, password) {
+    async signUp(username, password) {
         const url = `https://cognito-idp.${COGNITO_CONFIG.region}.amazonaws.com/`;
         
         const response = await fetch(url, {
@@ -24,12 +24,12 @@ class CognitoAuth {
             },
             body: JSON.stringify({
                 ClientId: COGNITO_CONFIG.clientId,
-                Username: email,
+                Username: username,
                 Password: password,
                 UserAttributes: [
                     {
                         Name: 'email',
-                        Value: email
+                        Value: username // Se for email, será usado aqui
                     }
                 ]
             })
@@ -38,9 +38,9 @@ class CognitoAuth {
         return await response.json();
     }
 
-    async signIn(email, password) {
+    async signIn(username, password) {
         const url = `https://cognito-idp.${COGNITO_CONFIG.region}.amazonaws.com/`;
-        this.currentUsername = email;
+        this.currentUsername = username;
         
         const response = await fetch(url, {
             method: 'POST',
@@ -52,7 +52,7 @@ class CognitoAuth {
                 ClientId: COGNITO_CONFIG.clientId,
                 AuthFlow: 'USER_PASSWORD_AUTH',
                 AuthParameters: {
-                    USERNAME: email,
+                    USERNAME: username,
                     PASSWORD: password
                 }
             })
