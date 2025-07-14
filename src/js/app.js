@@ -61,7 +61,7 @@ loginBtn.addEventListener('click', async () => {
     }
 });
 
-// Test API handler
+// Test API handler - CORRIGIDO
 testBtn.addEventListener('click', async () => {
     if (!auth.isAuthenticated()) {
         showApiResponse('Erro: Usuário não autenticado. Faça login primeiro.');
@@ -73,10 +73,18 @@ testBtn.addEventListener('click', async () => {
     showApiResponse('Carregando...');
     
     try {
+        // Obter o token de acesso
+        const accessToken = await auth.getAccessToken();
+        
+        if (!accessToken) {
+            throw new Error('Token de acesso não encontrado');
+        }
+        
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
             },
             body: JSON.stringify({
                 message: 'Teste do site estático',
