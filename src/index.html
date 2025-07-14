@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Example AWS App</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Example AWS App</h1>
+        </header>
+        
+        <main>
+            <section class="hero">
+                <h2>Bem-vindo!</h2>
+                <p>Este é um site estático hospedado no S3.</p>
+                <button id="testBtn">Testar API</button>
+            </section>
+            
+            <section class="results" id="results" style="display: none;">
+                <h3>Resultado da API:</h3>
+                <pre id="apiResponse"></pre>
+            </section>
+        </main>
+    </div>
+    
+    <script src="js/app.js"></script>
+</body>
+</html>
