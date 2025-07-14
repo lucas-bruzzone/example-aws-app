@@ -5,14 +5,19 @@ document.getElementById('testBtn').addEventListener('click', async () => {
     const responseDiv = document.getElementById('apiResponse');
     
     try {
+        // Verificar se está autenticado
+        if (!auth.isAuthenticated()) {
+            responseDiv.textContent = 'Erro: Usuário não autenticado. Faça login primeiro.';
+            resultsDiv.style.display = 'block';
+            return;
+        }
+
         resultsDiv.style.display = 'block';
         responseDiv.textContent = 'Carregando...';
         
         const response = await fetch(API_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: auth.getAuthHeaders(),
             body: JSON.stringify({
                 message: 'Teste do site estático',
                 timestamp: new Date().toISOString()
@@ -26,3 +31,13 @@ document.getElementById('testBtn').addEventListener('click', async () => {
         responseDiv.textContent = `Erro: ${error.message}`;
     }
 });
+
+// Login simples para teste
+async function testLogin() {
+    try {
+        const result = await auth.signIn('test@email.com', 'YourPassword123!');
+        console.log('Login resultado:', result);
+    } catch (error) {
+        console.error('Erro no login:', error);
+    }
+}
