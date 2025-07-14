@@ -64,6 +64,36 @@ class CognitoAuth {
         return data;
     }
 
+    async respondToNewPasswordRequired(session, newPassword) {
+        const url = `https://cognito-idp.${COGNITO_CONFIG.region}.amazonaws.com/`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-amz-json-1.1',
+                'X-Amz-Target': 'AWSCognitoIdentityProviderService.RespondToAuthChallenge'
+            },
+            body: JSON.stringify({
+                ClientId: COGNITO_CONFIG.clientId,
+                ChallengeName: 'NEW_PASSWORD_REQUIRED',
+                Session: session,
+                ChallengeResponses: {
+                    USERNAME: 'test@email.com',
+                    NEW_PASSWORD: newPassword
+                }
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.AuthenticationResult) {
+            this.accessToken = data.AuthenticationResult.AccessToken;
+            localStorage.setItem('accessToken', this.accessToken);
+        }
+        
+        return data;
+    }
+
     signOut() {
         this.accessToken = null;
         localStorage.removeItem('accessToken');
