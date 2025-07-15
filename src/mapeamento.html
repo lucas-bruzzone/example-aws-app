@@ -682,9 +682,31 @@
 
         // Start initialization when DOM is ready
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeMapSystem);
+            document.addEventListener('DOMContentLoaded', () => {
+                initializeMapSystem();
+                
+                // Direct logout handler for protected pages
+                document.addEventListener('click', (e) => {
+                    if (e.target.closest('#logoutBtn') || e.target.closest('.logout-btn')) {
+                        e.preventDefault();
+                        console.log('Mapeamento logout clicked');
+                        auth.signOut();
+                        window.location.href = '/';
+                    }
+                });
+            });
         } else {
             initializeMapSystem();
+            
+            // Direct logout handler
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('#logoutBtn') || e.target.closest('.logout-btn')) {
+                    e.preventDefault();
+                    console.log('Mapeamento logout clicked');
+                    auth.signOut();
+                    window.location.href = '/';
+                }
+            });
         }
     </script>
 </body>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Mapeamento Rural - Projeto</title>
+    <title>Sistema de Mapeamento Rural - Lucas Bruzzone</title>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/pages.css">
@@ -23,7 +23,7 @@
                 <button class="login-btn" id="loginBtn">Login</button>
                 <div class="user-menu hidden" id="userMenu">
                     <button class="user-avatar" id="userAvatar">
-                        <span id="userInitial">U</span>
+                        <span id="userInitial">L</span>
                     </button>
                     <div class="dropdown" id="userDropdown">
                         <a href="dashboard.html" class="dropdown-item">
@@ -56,39 +56,7 @@
                     <div class="project-status">
                         <span class="status-badge online">🟢 Online</span>
                         <span class="status-badge">AWS Hosted</span>
-                        <span class="status-badge">Full Stack</span>
-                    </div>
-                </div>
-                <div class="project-demo">
-                    <div class="demo-placeholder">
-                        <div class="demo-window">
-                            <div class="demo-header">
-                                <div class="demo-dots">
-                                    <span class="dot red"></span>
-                                    <span class="dot yellow"></span>
-                                    <span class="dot green"></span>
-                                </div>
-                                <span class="demo-title">Mapeamento Rural</span>
-                            </div>
-                            <div class="demo-content">
-                                <div class="demo-map">
-                                    <div class="map-layer"></div>
-                                    <div class="map-polygon"></div>
-                                    <div class="map-controls">
-                                        <div class="control-btn">⬟</div>
-                                        <div class="control-btn">✏️</div>
-                                        <div class="control-btn">🗑️</div>
-                                    </div>
-                                </div>
-                                <div class="demo-sidebar">
-                                    <div class="property-info">
-                                        <h4>Fazenda Santa Maria</h4>
-                                        <p>Área: 45.7 hectares</p>
-                                        <p>Perímetro: 2.8 km</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <span class="status-badge">Sistema Web</span>
                     </div>
                 </div>
             </div>
@@ -221,6 +189,35 @@
             </div>
         </section>
 
+        <!-- Architecture Section -->
+        <section class="architecture">
+            <div class="container">
+                <h2 class="section-title">Arquitetura do Sistema</h2>
+                <div class="architecture-grid">
+                    <div class="arch-item">
+                        <div class="arch-icon">🌐</div>
+                        <h3>Frontend</h3>
+                        <p>Aplicação web estática hospedada no S3 com distribuição via CloudFront para performance global.</p>
+                    </div>
+                    <div class="arch-item">
+                        <div class="arch-icon">🔐</div>
+                        <h3>Autenticação</h3>
+                        <p>AWS Cognito gerencia usuários, autenticação e autorização com tokens JWT seguros.</p>
+                    </div>
+                    <div class="arch-item">
+                        <div class="arch-icon">⚡</div>
+                        <h3>API Serverless</h3>
+                        <p>AWS Lambda + API Gateway para endpoints REST escaláveis e sem gerenciamento de servidor.</p>
+                    </div>
+                    <div class="arch-item">
+                        <div class="arch-icon">💾</div>
+                        <h3>Base de Dados</h3>
+                        <p>DynamoDB para armazenamento NoSQL flexível e de alta performance das propriedades.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- CTA Section -->
         <section class="cta-section">
             <div class="container">
@@ -241,24 +238,27 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h4>Contato</h4>
-                    <p>📧 seu.email@exemplo.com</p>
-                    <p>📱 (11) 9999-9999</p>
+                    <h4>🌐 Conecte-se Comigo</h4>
+                    <a href="https://www.linkedin.com/in/lucas-bruzzone/" target="_blank" class="footer-link">
+                        LinkedIn
+                    </a>
+                    <a href="mailto:lucas.rbruzzone@gmail.com" class="footer-link">
+                        Email
+                    </a>
                 </div>
                 <div class="footer-section">
-                    <h4>Links</h4>
-                    <a href="#" class="footer-link">LinkedIn</a>
-                    <a href="#" class="footer-link">GitHub</a>
-                    <a href="#" class="footer-link">Portfólio</a>
+                    <h4>📞 Contato</h4>
+                    <p>📧 lucas.rbruzzone@gmail.com</p>
+                    <p>📱 (35) 98800-6634</p>
                 </div>
                 <div class="footer-section">
                     <h4>Tecnologias</h4>
-                    <p>🚀 AWS Cloud</p>
+                    <p>☁️ AWS Cloud</p>
                     <p>🗺️ Leaflet.js</p>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2024 Seu Nome. Desenvolvido com 💜</p>
+                <p>&copy; 2024 Lucas Bruzzone. Desenvolvido com 💜</p>
             </div>
         </div>
     </footer>
