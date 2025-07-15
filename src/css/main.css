@@ -631,7 +631,120 @@ a:hover {
     border: 0;
 }
 
-/* Responsive */
+/* About Section */
+.about-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--space-3xl);
+    align-items: start;
+}
+
+.about-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.about-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+    background: var(--gray-50);
+    border-radius: var(--border-radius-lg);
+    border-left: 4px solid var(--primary);
+    transition: var(--transition-slow);
+}
+
+.about-item:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-md);
+}
+
+.about-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+.about-item p {
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.certifications {
+    background: white;
+    padding: var(--space-xl);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    height: fit-content;
+}
+
+.certifications h3 {
+    margin-bottom: var(--space-lg);
+    color: var(--gray-900);
+}
+
+.cert-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.cert-item {
+    padding: var(--space-md);
+    background: var(--gray-50);
+    border-radius: var(--border-radius);
+    border-left: 3px solid var(--success);
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.cert-item:hover {
+    background: var(--gray-100);
+    transform: translateX(2px);
+}
+
+/* Projects Grid */
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: var(--space-3xl);
+}
+
+/* Demo Content Update */
+.demo-content {
+    display: block;
+    height: 300px;
+}
+
+.demo-map {
+    background: linear-gradient(45deg, #e5f3ff 0%, #b3d9ff 100%);
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+    border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+}
+
+/* Responsive for About */
+@media (max-width: 768px) {
+    .about-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-xl);
+    }
+    
+    .about-item {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-md);
+    }
+    
+    .projects-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-xl);
+    }
+}
 @media (max-width: 768px) {
     .header-container {
         padding: var(--space-sm) var(--space-md);

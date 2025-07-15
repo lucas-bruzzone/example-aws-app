@@ -294,6 +294,16 @@
         // Initialize dashboard when ready
         document.addEventListener('DOMContentLoaded', () => {
             new Dashboard();
+            
+            // Direct logout handler for protected pages
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('#logoutBtn') || e.target.closest('.logout-btn')) {
+                    e.preventDefault();
+                    console.log('Dashboard logout clicked');
+                    auth.signOut();
+                    window.location.href = '/';
+                }
+            });
         });
     </script>
 </body>

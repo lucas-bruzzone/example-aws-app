@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucas Bruzzone - Desenvolvedor Full Stack</title>
+    <title>Lucas Bruzzone - Cientista de Dados</title>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/pages.css">
@@ -26,7 +26,7 @@
                 <!-- Estado logado (hidden by default) -->
                 <div class="user-menu hidden" id="userMenu">
                     <button class="user-avatar" id="userAvatar">
-                        <span id="userInitial">U</span>
+                        <span id="userInitial">L</span>
                     </button>
                     <div class="dropdown" id="userDropdown">
                         <a href="dashboard.html" class="dropdown-item">
@@ -52,11 +52,10 @@
             <div class="hero-container">
                 <div class="hero-content">
                     <h1 class="hero-title">
-                        Desenvolvedor <span class="highlight">Full Stack</span>
+                        Olá 👋, eu sou <span class="highlight">Lucas Ricardo Duarte Bruzzone</span>
                     </h1>
                     <p class="hero-subtitle">
-                        Especializado em soluções AWS, JavaScript e sistemas web modernos. 
-                        Criando aplicações robustas e escaláveis.
+                        Cientista de Dados | 2x AWS Certified | Mestre em Machine Learning | Professor Universitário
                     </p>
                     <div class="hero-actions">
                         <a href="projeto.html" class="btn btn-primary">Ver Projeto</a>
@@ -74,16 +73,16 @@
                         </div>
                         <div class="card-content">
                             <div class="code-line">
-                                <span class="keyword">const</span> <span class="variable">projeto</span> = {
+                                <span class="keyword">const</span> <span class="variable">perfil</span> = {
                             </div>
                             <div class="code-line indent">
-                                <span class="property">tipo</span>: <span class="string">'Mapeamento Rural'</span>,
+                                <span class="property">area</span>: <span class="string">'Ciência de Dados'</span>,
                             </div>
                             <div class="code-line indent">
-                                <span class="property">tech</span>: [<span class="string">'AWS'</span>, <span class="string">'JavaScript'</span>],
+                                <span class="property">cloud</span>: [<span class="string">'AWS'</span>, <span class="string">'Terraform'</span>],
                             </div>
                             <div class="code-line indent">
-                                <span class="property">status</span>: <span class="string">'🚀 Online'</span>
+                                <span class="property">ensino</span>: <span class="string">'🎓 Professor'</span>
                             </div>
                             <div class="code-line">}</div>
                         </div>
@@ -92,15 +91,52 @@
             </div>
         </section>
 
-        <!-- Project Showcase -->
+        <!-- About Section -->
         <section class="showcase">
             <div class="container">
-                <h2 class="section-title">Projeto em Destaque</h2>
+                <h2 class="section-title">🚀 Sobre Mim</h2>
+                <div class="about-grid">
+                    <div class="about-content">
+                        <div class="about-item">
+                            <span class="about-icon">📊</span>
+                            <p>Data Analyst na E-ctare, focado em arquitetura cloud e pipelines de dados</p>
+                        </div>
+                        <div class="about-item">
+                            <span class="about-icon">🎓</span>
+                            <p>Professor de Engenharia de Software e Microsserviços na Libertas Faculdades Integradas</p>
+                        </div>
+                        <div class="about-item">
+                            <span class="about-icon">🎯</span>
+                            <p>Mestre em Ciências da Computação (UFSCar) com especialização em ML e NLP</p>
+                        </div>
+                        <div class="about-item">
+                            <span class="about-icon">⚡</span>
+                            <p>Implemento soluções AWS para democratização de dados e cultura data-driven</p>
+                        </div>
+                    </div>
+                    
+                    <div class="certifications">
+                        <h3>🎓 Certificações</h3>
+                        <div class="cert-list">
+                            <div class="cert-item">🏆 AWS Certified AI Practitioner</div>
+                            <div class="cert-item">☁️ AWS Certified Cloud Practitioner</div>
+                            <div class="cert-item">📚 AWS Academy Educator</div>
+                            <div class="cert-item">🎯 Bootcamp Engenharia de Dados</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Single Project Showcase -->
+        <section class="showcase">
+            <div class="container">
+                <h2 class="section-title">Projeto Desenvolvido</h2>
                 <div class="project-card">
                     <div class="project-image">
                         <div class="project-placeholder">
                             <span class="placeholder-icon">🗺️</span>
-                            <span class="placeholder-text">Sistema de Mapeamento</span>
+                            <span class="placeholder-text">Sistema de Mapeamento Rural</span>
                         </div>
                     </div>
                     <div class="project-content">
@@ -114,7 +150,6 @@
                             <span class="tech-tag">AWS Cognito</span>
                             <span class="tech-tag">Leaflet.js</span>
                             <span class="tech-tag">JavaScript</span>
-                            <span class="tech-tag">API Gateway</span>
                             <span class="tech-tag">S3</span>
                         </div>
                         <div class="project-actions">
@@ -129,27 +164,27 @@
         <!-- Skills Section -->
         <section class="skills">
             <div class="container">
-                <h2 class="section-title">Tecnologias</h2>
+                <h2 class="section-title">🛠️ Stack Tecnológico</h2>
                 <div class="skills-grid">
                     <div class="skill-card">
+                        <div class="skill-icon">📊</div>
+                        <h3>Data & Analytics</h3>
+                        <p>Python, Metabase, ETL/ELT, Machine Learning, NLP, Business Intelligence</p>
+                    </div>
+                    <div class="skill-card">
                         <div class="skill-icon">☁️</div>
-                        <h3>AWS Cloud</h3>
-                        <p>S3, Lambda, API Gateway, Cognito, CloudFront</p>
+                        <h3>Cloud & Infraestrutura</h3>
+                        <p>AWS (Lambda, DynamoDB, S3), Terraform, GitHub Actions, Docker</p>
                     </div>
                     <div class="skill-card">
-                        <div class="skill-icon">💻</div>
-                        <h3>Frontend</h3>
-                        <p>JavaScript, HTML5, CSS3, Responsive Design</p>
+                        <div class="skill-icon">🗄️</div>
+                        <h3>Databases</h3>
+                        <p>SQL, NoSQL (DynamoDB), Modelagem de dados, Pipeline de dados</p>
                     </div>
                     <div class="skill-card">
-                        <div class="skill-icon">🗺️</div>
-                        <h3>Mapas</h3>
-                        <p>Leaflet, GeoJSON, Turf.js, Spatial Analysis</p>
-                    </div>
-                    <div class="skill-card">
-                        <div class="skill-icon">🔐</div>
-                        <h3>Autenticação</h3>
-                        <p>JWT, OAuth, AWS Cognito, Session Management</p>
+                        <div class="skill-icon">🎓</div>
+                        <h3>Ensino & Research</h3>
+                        <p>Engenharia de Software, Microsserviços, ML Research, Orientação acadêmica</p>
                     </div>
                 </div>
             </div>
@@ -161,20 +196,23 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h4>Contato</h4>
-                    <p>📧 lucas.bruzzone@exemplo.com</p>
-                    <p>📱 (35) 99999-9999</p>
+                    <h4>🌐 Conecte-se Comigo</h4>
+                    <a href="https://www.linkedin.com/in/lucas-bruzzone/" target="_blank" class="footer-link">
+                        LinkedIn
+                    </a>
+                    <a href="mailto:lucas.rbruzzone@gmail.com" class="footer-link">
+                        Email
+                    </a>
                 </div>
                 <div class="footer-section">
-                    <h4>Links</h4>
-                    <a href="#" class="footer-link">LinkedIn</a>
-                    <a href="#" class="footer-link">GitHub</a>
-                    <a href="#" class="footer-link">Portfólio</a>
+                    <h4>📞 Contato</h4>
+                    <p>📧 lucas.rbruzzone@gmail.com</p>
+                    <p>📱 (35) 98800-6634</p>
                 </div>
                 <div class="footer-section">
-                    <h4>Localização</h4>
-                    <p>📍 São Sebastião do Paraíso, MG</p>
-                    <p>🇧🇷 Brasil</p>
+                    <h4>📍 Localização</h4>
+                    <p>🇧🇷 São Sebastião do Paraíso, MG</p>
+                    <p>🎓 Professor Universitário</p>
                 </div>
             </div>
             <div class="footer-bottom">

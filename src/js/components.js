@@ -175,14 +175,8 @@ class UserMenu {
     }
 
     init() {
-        // Use event delegation for logout buttons
-        document.addEventListener('click', (e) => {
-            const target = e.target.closest('.logout-btn') || e.target.closest('#logoutBtn');
-            if (target) {
-                e.preventDefault();
-                this.handleLogout();
-            }
-        });
+        // Direct binding for logout buttons
+        this.bindLogoutButtons();
 
         // Handle dropdown visibility
         if (this.userMenu && this.dropdown) {
@@ -202,6 +196,25 @@ class UserMenu {
                     this.dropdown.style.transform = 'translateY(-10px)';
                 }, 100);
             });
+        }
+    }
+
+    bindLogoutButtons() {
+        // Try to bind immediately
+        const logoutBtns = document.querySelectorAll('#logoutBtn, .logout-btn');
+        console.log('Found logout buttons:', logoutBtns.length);
+        
+        logoutBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Logout button clicked');
+                this.handleLogout();
+            });
+        });
+
+        // Retry after delay if no buttons found
+        if (logoutBtns.length === 0) {
+            setTimeout(() => this.bindLogoutButtons(), 1000);
         }
     }
 
@@ -363,12 +376,37 @@ window.routeProtection = null;
 
 // Initialize components when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('Components initializing...');
+    
     // Initialize components
     window.modal = new Modal('loginModal');
     window.loginForm = new LoginForm('loginForm', window.modal);
     window.userMenu = new UserMenu();
     window.toast = new StatusToast();
     window.routeProtection = new RouteProtection();
+    
+    // Also bind logout with event delegation as backup
+    document.addEventListener('click', (e) => {
+        const target = e.target;
+        console.log('Click detected on:', target);
+        
+        if (target.id === 'logoutBtn' || 
+            target.classList.contains('logout-btn') ||
+            target.closest('#logoutBtn') ||
+            target.closest('.logout-btn')) {
+            
+            console.log('Logout button detected, logging out...');
+            e.preventDefault();
+            
+            auth.signOut();
+            if (window.toast) {
+                window.toast.show('Logout realizado com sucesso', 'success');
+            }
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 500);
+        }
+    });
     
     console.log('Components initialized');
 });
