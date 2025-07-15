@@ -295,7 +295,9 @@ function clearPropertyForm() {
     if (calculatedPerimeterSpan) calculatedPerimeterSpan.textContent = '-';
 }
 
-// Salvar propriedade
+// Funções para integração com a API de propriedades
+
+// Salvar propriedade - CORRIGIDO
 async function handleSaveProperty() {
     const name = propertyNameInput.value.trim();
     const type = propertyTypeSelect.value;
@@ -320,22 +322,34 @@ async function handleSaveProperty() {
         description: description,
         area: parseFloat(metrics.area),
         perimeter: metrics.perimeter,
-        coordinates: metrics.coordinates,
-        createdAt: new Date().toISOString()
+        coordinates: metrics.coordinates
     };
     
     savePropertyBtn.disabled = true;
     savePropertyBtn.textContent = 'Salvando...';
     
     try {
-        // Por enquanto, simular salvamento local
-        const property = {
-            id: generateId(),
-            ...propertyData,
-            userId: 'current_user'
-        };
+        const token = auth.getToken();
+        if (!token) {
+            throw new Error('Token de autenticação não encontrado');
+        }
         
-        properties.push(property);
+        const response = await fetch(PROPERTIES_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(propertyData)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Erro HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        const savedProperty = result.property;
         
         // Atualizar o polígono salvo
         currentPolygon.setStyle({
@@ -345,32 +359,31 @@ async function handleSaveProperty() {
         
         currentPolygon.bindPopup(`
             <div class="popup-content">
-                <strong>${property.name}</strong><br>
-                Tipo: ${capitalizeFirst(property.type)}<br>
-                Área: ${property.area} hectares<br>
-                Perímetro: ${property.perimeter} metros
+                <strong>${savedProperty.name}</strong><br>
+                Tipo: ${capitalizeFirst(savedProperty.type)}<br>
+                Área: ${savedProperty.area} hectares<br>
+                Perímetro: ${savedProperty.perimeter} metros
             </div>
         `);
         
-        // Adicionar dados à camada para referência
-        currentPolygon.propertyData = property;
+        currentPolygon.propertyData = savedProperty;
         
         hidePropertyForm();
-        updatePropertiesList();
+        loadProperties(); // Recarregar lista
         currentPolygon = null;
         
         showStatus(`Propriedade "${name}" salva com sucesso!`, 'success');
         
     } catch (error) {
         console.error('Erro ao salvar propriedade:', error);
-        showStatus('Erro ao salvar propriedade. Tente novamente.', 'error');
+        showStatus(`Erro ao salvar: ${error.message}`, 'error');
     } finally {
         savePropertyBtn.disabled = false;
         savePropertyBtn.textContent = 'Salvar Propriedade';
     }
 }
 
-// Carregar propriedades
+// Carregar propriedades - CORRIGIDO
 async function loadProperties() {
     if (!auth.isAuthenticated()) {
         window.location.href = 'index.html';
@@ -381,17 +394,142 @@ async function loadProperties() {
     refreshPropertiesBtn.textContent = 'Carregando...';
     
     try {
+        const token = auth.getToken();
+        if (!token) {
+            throw new Error('Token de autenticação não encontrado');
+        }
+        
+        const response = await fetch(PROPERTIES_API_URL, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            if (response.status === 401) {
+                auth.signOut();
+                window.location.href = 'index.html';
+                return;
+            }
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Erro HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        properties = data.properties || [];
+        
+        // Limpar polígonos existentes do mapa
+        drawnItems.clearLayers();
+        
+        // Adicionar propriedades ao mapa
+        properties.forEach(property => {
+            if (property.coordinates && property.coordinates.length > 0) {
+                // Converter coordenadas (lng,lat) para (lat,lng) para Leaflet
+                const latLngs = property.coordinates.slice(0, -1).map(coord => [coord[1], coord[0]]);
+                
+                const polygon = L.polygon(latLngs, {
+                    color: '#28a745',
+                    fillColor: '#28a745',
+                    weight: 3,
+                    fillOpacity: 0.2
+                });
+                
+                polygon.bindPopup(`
+                    <div class="popup-content">
+                        <strong>${property.name}</strong><br>
+                        Tipo: ${capitalizeFirst(property.type)}<br>
+                        Área: ${property.area} hectares<br>
+                        Perímetro: ${property.perimeter} metros<br>
+                        ${property.description ? `<em>${property.description}</em>` : ''}
+                    </div>
+                `);
+                
+                polygon.propertyData = property;
+                drawnItems.addLayer(polygon);
+            }
+        });
+        
         updatePropertiesList();
-        showStatus('Propriedades carregadas.', 'success');
+        showStatus(`${properties.length} propriedades carregadas.`, 'success');
         
     } catch (error) {
         console.error('Erro ao carregar propriedades:', error);
-        showStatus('Erro ao carregar propriedades.', 'error');
+        showStatus(`Erro ao carregar: ${error.message}`, 'error');
     } finally {
         refreshPropertiesBtn.disabled = false;
         refreshPropertiesBtn.textContent = 'Atualizar';
     }
 }
+
+// Atualizar propriedade - NOVA FUNÇÃO
+async function updatePropertyFromAPI(propertyId, updateData) {
+    const token = auth.getToken();
+    if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+    }
+    
+    const response = await fetch(`${PROPERTIES_API_URL}/${propertyId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updateData)
+    });
+    
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Erro HTTP ${response.status}`);
+    }
+    
+    const result = await response.json();
+    return result.property;
+}
+
+// Excluir propriedade - CORRIGIDO
+async function deleteProperty(propertyId) {
+    if (!confirm('Tem certeza que deseja excluir esta propriedade?')) {
+        return;
+    }
+    
+    try {
+        const token = auth.getToken();
+        if (!token) {
+            throw new Error('Token de autenticação não encontrado');
+        }
+        
+        const response = await fetch(`${PROPERTIES_API_URL}/${propertyId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Erro HTTP ${response.status}`);
+        }
+        
+        // Remover da lista local
+        properties = properties.filter(p => p.id !== propertyId);
+        
+        // Remover do mapa
+        drawnItems.eachLayer(layer => {
+            if (layer.propertyData && layer.propertyData.id === propertyId) {
+                drawnItems.removeLayer(layer);
+            }
+        });
+        
+        updatePropertiesList();
+        showStatus('Propriedade excluída com sucesso.', 'success');
+        
+    } catch (error) {
+        console.error('Erro ao excluir propriedade:', error);
+        showStatus(`Erro ao excluir: ${error.message}`, 'error');
+    }
+}
+
 
 // Atualizar lista de propriedades
 function updatePropertiesList() {
@@ -595,31 +733,6 @@ function zoomToProperty(propertyId) {
     }
 }
 
-// Excluir propriedade
-async function deleteProperty(propertyId) {
-    if (!confirm('Tem certeza que deseja excluir esta propriedade?')) {
-        return;
-    }
-    
-    try {
-        // Remover da lista local
-        properties = properties.filter(p => p.id !== propertyId);
-        
-        // Remover do mapa
-        drawnItems.eachLayer(layer => {
-            if (layer.propertyData && layer.propertyData.id === propertyId) {
-                drawnItems.removeLayer(layer);
-            }
-        });
-        
-        updatePropertiesList();
-        showStatus('Propriedade excluída com sucesso.', 'success');
-        
-    } catch (error) {
-        console.error('Erro ao excluir propriedade:', error);
-        showStatus('Erro ao excluir propriedade.', 'error');
-    }
-}
 
 // Logout
 function handleLogout() {
