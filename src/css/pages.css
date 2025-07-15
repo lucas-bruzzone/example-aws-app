@@ -520,8 +520,10 @@
 .project-subtitle {
     font-size: 1.2rem;
     margin-bottom: var(--space-xl);
-    opacity: 0.9;
+    opacity: 1; /* Era 0.9 */
     line-height: 1.6;
+    color: #ffffff; /* Força branco puro */
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Adiciona sombra */
 }
 
 .project-status {
@@ -842,7 +844,9 @@
 .cta-content p {
     font-size: 1.2rem;
     margin-bottom: var(--space-xl);
-    opacity: 0.9;
+    opacity: 1; /* Era 0.9 */
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .cta-actions {
