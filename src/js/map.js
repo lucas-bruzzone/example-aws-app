@@ -7,6 +7,7 @@ let drawnItems;
 let drawControl;
 let currentPolygon = null;
 let properties = [];
+let editingPropertyId = null;
 
 // DOM Elements
 const propertyForm = document.getElementById('propertyForm');
@@ -22,7 +23,7 @@ const propertiesList = document.getElementById('propertiesList');
 const mapStatus = document.getElementById('mapStatus');
 const logoutNavBtn = document.getElementById('logoutNavBtn');
 
-// Initialize app - versão simplificada baseada no teste
+// Initialize app
 window.addEventListener('load', function() {
     setTimeout(function() {
         // Verificar autenticação primeiro
@@ -32,7 +33,7 @@ window.addEventListener('load', function() {
         }
         
         try {
-            // Verificar bibliotecas (mesmo código que funcionou no teste)
+            // Verificar bibliotecas
             if (typeof L === 'undefined') {
                 throw new Error('Leaflet não carregou');
             }
@@ -63,7 +64,7 @@ window.addEventListener('load', function() {
     }, 500);
 });
 
-// Inicializar mapa - simplificado
+// Inicializar mapa
 function initializeMap() {
     try {
         // Coordenadas de São Sebastião do Paraíso, MG
@@ -79,7 +80,7 @@ function initializeMap() {
         drawnItems = new L.FeatureGroup();
         map.addLayer(drawnItems);
 
-        // Configurar controles de desenho - código que funcionou no teste
+        // Configurar controles de desenho
         setupDrawControls();
         
         // Event listeners do mapa
@@ -94,7 +95,7 @@ function initializeMap() {
     }
 }
 
-// Configurar controles de desenho - simplificado baseado no teste
+// Configurar controles de desenho
 function setupDrawControls() {
     try {
         drawControl = new L.Control.Draw({
@@ -243,13 +244,13 @@ function setupEventListeners() {
         logoutNavBtn.addEventListener('click', handleLogout);
     }
     
-    // Formulário de propriedade
+    // Formulário de propriedade - usar função controladora
     if (savePropertyBtn) {
-        savePropertyBtn.addEventListener('click', handleSaveProperty);
+        savePropertyBtn.addEventListener('click', handlePropertySubmit);
     }
     
     if (cancelFormBtn) {
-        cancelFormBtn.addEventListener('click', hidePropertyForm);
+        cancelFormBtn.addEventListener('click', handleCancelForm);
     }
     
     // Atualizar propriedades
@@ -267,6 +268,21 @@ function setupEventListeners() {
     }
 }
 
+// Função controladora que decide se é criação ou edição
+async function handlePropertySubmit() {
+    if (editingPropertyId) {
+        await handleUpdateProperty(editingPropertyId);
+    } else {
+        await handleSaveProperty();
+    }
+}
+
+// Função para cancelar formulário
+function handleCancelForm() {
+    hidePropertyForm();
+    resetFormToCreateMode();
+}
+
 // Mostrar formulário de propriedade
 function showPropertyForm(metrics) {
     updateFormMetrics(metrics);
@@ -278,6 +294,7 @@ function showPropertyForm(metrics) {
 function hidePropertyForm() {
     propertyForm.classList.add('hidden');
     clearPropertyForm();
+    resetFormToCreateMode();
 }
 
 // Atualizar métricas no formulário
@@ -295,9 +312,15 @@ function clearPropertyForm() {
     if (calculatedPerimeterSpan) calculatedPerimeterSpan.textContent = '-';
 }
 
-// Funções para integração com a API de propriedades
+// Resetar formulário para modo de criação
+function resetFormToCreateMode() {
+    editingPropertyId = null;
+    currentPolygon = null;
+    savePropertyBtn.textContent = 'Salvar Propriedade';
+    cancelFormBtn.textContent = 'Cancelar';
+}
 
-// Salvar propriedade - CORRIGIDO
+// Salvar propriedade
 async function handleSaveProperty() {
     const name = propertyNameInput.value.trim();
     const type = propertyTypeSelect.value;
@@ -383,7 +406,7 @@ async function handleSaveProperty() {
     }
 }
 
-// Carregar propriedades - CORRIGIDO
+// Carregar propriedades
 async function loadProperties() {
     if (!auth.isAuthenticated()) {
         window.location.href = 'index.html';
@@ -462,75 +485,6 @@ async function loadProperties() {
     }
 }
 
-// Atualizar propriedade - NOVA FUNÇÃO
-async function updatePropertyFromAPI(propertyId, updateData) {
-    const token = auth.getToken();
-    if (!token) {
-        throw new Error('Token de autenticação não encontrado');
-    }
-    
-    const response = await fetch(`${PROPERTIES_API_URL}/${propertyId}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(updateData)
-    });
-    
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Erro HTTP ${response.status}`);
-    }
-    
-    const result = await response.json();
-    return result.property;
-}
-
-// Excluir propriedade - CORRIGIDO
-async function deleteProperty(propertyId) {
-    if (!confirm('Tem certeza que deseja excluir esta propriedade?')) {
-        return;
-    }
-    
-    try {
-        const token = auth.getToken();
-        if (!token) {
-            throw new Error('Token de autenticação não encontrado');
-        }
-        
-        const response = await fetch(`${PROPERTIES_API_URL}/${propertyId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Erro HTTP ${response.status}`);
-        }
-        
-        // Remover da lista local
-        properties = properties.filter(p => p.id !== propertyId);
-        
-        // Remover do mapa
-        drawnItems.eachLayer(layer => {
-            if (layer.propertyData && layer.propertyData.id === propertyId) {
-                drawnItems.removeLayer(layer);
-            }
-        });
-        
-        updatePropertiesList();
-        showStatus('Propriedade excluída com sucesso.', 'success');
-        
-    } catch (error) {
-        console.error('Erro ao excluir propriedade:', error);
-        showStatus(`Erro ao excluir: ${error.message}`, 'error');
-    }
-}
-
-
 // Atualizar lista de propriedades
 function updatePropertiesList() {
     if (!propertiesList) return;
@@ -576,6 +530,9 @@ async function editProperty(propertyId) {
         return;
     }
     
+    // Definir modo de edição
+    editingPropertyId = propertyId;
+    
     // Preencher formulário com dados atuais
     propertyNameInput.value = property.name;
     propertyTypeSelect.value = property.type;
@@ -600,14 +557,7 @@ async function editProperty(propertyId) {
     // Mostrar formulário em modo edição
     propertyForm.classList.remove('hidden');
     savePropertyBtn.textContent = 'Atualizar Propriedade';
-    savePropertyBtn.onclick = () => handleUpdateProperty(propertyId);
-    
-    // Adicionar botão cancelar
     cancelFormBtn.textContent = 'Cancelar Edição';
-    cancelFormBtn.onclick = () => {
-        hidePropertyForm();
-        resetFormToCreateMode();
-    };
     
     propertyNameInput.focus();
     showStatus('Modo de edição ativado. Modifique os dados e clique em "Atualizar".', 'info');
@@ -683,12 +633,29 @@ async function handleUpdateProperty(propertyId) {
     }
 }
 
-// Resetar formulário para modo de criação
-function resetFormToCreateMode() {
-    savePropertyBtn.textContent = 'Salvar Propriedade';
-    savePropertyBtn.onclick = handleSaveProperty;
-    cancelFormBtn.textContent = 'Cancelar';
-    cancelFormBtn.onclick = hidePropertyForm;
+// Atualizar propriedade via API
+async function updatePropertyFromAPI(propertyId, updateData) {
+    const token = auth.getToken();
+    if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+    }
+    
+    const response = await fetch(`${PROPERTIES_API_URL}/${propertyId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updateData)
+    });
+    
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Erro HTTP ${response.status}`);
+    }
+    
+    const result = await response.json();
+    return result.property;
 }
 
 // Focar em propriedade no mapa
@@ -733,6 +700,48 @@ function zoomToProperty(propertyId) {
     }
 }
 
+// Excluir propriedade
+async function deleteProperty(propertyId) {
+    if (!confirm('Tem certeza que deseja excluir esta propriedade?')) {
+        return;
+    }
+    
+    try {
+        const token = auth.getToken();
+        if (!token) {
+            throw new Error('Token de autenticação não encontrado');
+        }
+        
+        const response = await fetch(`${PROPERTIES_API_URL}/${propertyId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Erro HTTP ${response.status}`);
+        }
+        
+        // Remover da lista local
+        properties = properties.filter(p => p.id !== propertyId);
+        
+        // Remover do mapa
+        drawnItems.eachLayer(layer => {
+            if (layer.propertyData && layer.propertyData.id === propertyId) {
+                drawnItems.removeLayer(layer);
+            }
+        });
+        
+        updatePropertiesList();
+        showStatus('Propriedade excluída com sucesso.', 'success');
+        
+    } catch (error) {
+        console.error('Erro ao excluir propriedade:', error);
+        showStatus(`Erro ao excluir: ${error.message}`, 'error');
+    }
+}
 
 // Logout
 function handleLogout() {
