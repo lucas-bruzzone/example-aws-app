@@ -3,61 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Example AWS App</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Lucas Bruzzone - Desenvolvedor Full Stack</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Example AWS App</h1>
-            <nav class="nav-menu hidden" id="navMenu">
-                <a href="index.html" class="active">Início</a>
-                <a href="map.html">Mapeamento</a>
-                <button id="logoutNavBtn" class="logout-btn">Sair</button>
+    <!-- Header Global -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <a href="/">Lucas Bruzzone</a>
+            </div>
+            <nav class="nav">
+                <a href="/" class="nav-link active">Home</a>
+                <a href="projeto.html" class="nav-link">Projeto</a>
             </nav>
-        </header>
-        
-        <main>
-            <section class="auth" id="authSection">
-                <div class="auth-form">
-                    <h3>Faça seu login</h3>
-                    <div class="form-group">
-                        <input type="text" id="email" placeholder="Email ou nome de usuário" required autocomplete="username">
-                        <input type="password" id="password" placeholder="Digite sua senha" required autocomplete="current-password">
+            <div class="auth-section">
+                <!-- Estado deslogado -->
+                <button class="login-btn" id="loginBtn">Login</button>
+                
+                <!-- Estado logado (hidden by default) -->
+                <div class="user-menu hidden" id="userMenu">
+                    <button class="user-avatar" id="userAvatar">
+                        <span id="userInitial">U</span>
+                    </button>
+                    <div class="dropdown" id="userDropdown">
+                        <a href="dashboard.html" class="dropdown-item">
+                            <span class="icon">📊</span> Dashboard
+                        </a>
+                        <a href="mapeamento.html" class="dropdown-item">
+                            <span class="icon">🗺️</span> Mapeamento
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item logout-btn" id="logoutBtn">
+                            <span class="icon">🚪</span> Sair
+                        </button>
                     </div>
-                    <button id="loginBtn">Entrar</button>
-                    <div id="authStatus"></div>
                 </div>
-            </section>
+            </div>
+        </div>
+    </header>
 
-            <section class="hero hidden" id="heroSection">
-                <h2>Bem-vindo!</h2>
-                <p>Este é um site estático hospedado no S3 com autenticação AWS Cognito.</p>
-                <div class="feature-cards">
-                    <div class="feature-card">
-                        <h3>🗺️ Mapeamento</h3>
-                        <p>Cadastre e gerencie suas propriedades rurais com polígonos interativos no mapa.</p>
-                        <a href="map.html" class="btn">Acessar Mapeamento</a>
-                    </div>
-                    <div class="feature-card">
-                        <h3>🔧 API de Teste</h3>
-                        <p>Teste a integração com a API AWS Lambda para validar a autenticação.</p>
-                        <button id="testBtn" class="btn">Testar API</button>
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-container">
+                <div class="hero-content">
+                    <h1 class="hero-title">
+                        Desenvolvedor <span class="highlight">Full Stack</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        Especializado em soluções AWS, JavaScript e sistemas web modernos. 
+                        Criando aplicações robustas e escaláveis.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="projeto.html" class="btn btn-primary">Ver Projeto</a>
+                        <button class="btn btn-secondary" id="heroLoginBtn">Testar Sistema</button>
                     </div>
                 </div>
-                <div class="btn-group">
-                    <button id="logoutBtn" class="logout-btn">Sair</button>
+                <div class="hero-visual">
+                    <div class="hero-card">
+                        <div class="card-header">
+                            <div class="card-dots">
+                                <span class="dot red"></span>
+                                <span class="dot yellow"></span>
+                                <span class="dot green"></span>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="code-line">
+                                <span class="keyword">const</span> <span class="variable">projeto</span> = {
+                            </div>
+                            <div class="code-line indent">
+                                <span class="property">tipo</span>: <span class="string">'Mapeamento Rural'</span>,
+                            </div>
+                            <div class="code-line indent">
+                                <span class="property">tech</span>: [<span class="string">'AWS'</span>, <span class="string">'JavaScript'</span>],
+                            </div>
+                            <div class="code-line indent">
+                                <span class="property">status</span>: <span class="string">'🚀 Online'</span>
+                            </div>
+                            <div class="code-line">}</div>
+                        </div>
+                    </div>
                 </div>
-            </section>
-            
-            <section class="results" id="results">
-                <h3>Resultado da API:</h3>
-                <pre id="apiResponse"></pre>
-            </section>
-        </main>
+            </div>
+        </section>
+
+        <!-- Project Showcase -->
+        <section class="showcase">
+            <div class="container">
+                <h2 class="section-title">Projeto em Destaque</h2>
+                <div class="project-card">
+                    <div class="project-image">
+                        <div class="project-placeholder">
+                            <span class="placeholder-icon">🗺️</span>
+                            <span class="placeholder-text">Sistema de Mapeamento</span>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Sistema de Mapeamento de Propriedades Rurais</h3>
+                        <p class="project-description">
+                            Aplicação web completa para cadastro e gestão de propriedades rurais com 
+                            mapeamento interativo, cálculos automáticos de área e perímetro, integração 
+                            com AWS Cognito para autenticação.
+                        </p>
+                        <div class="project-tech">
+                            <span class="tech-tag">AWS Cognito</span>
+                            <span class="tech-tag">Leaflet.js</span>
+                            <span class="tech-tag">JavaScript</span>
+                            <span class="tech-tag">API Gateway</span>
+                            <span class="tech-tag">S3</span>
+                        </div>
+                        <div class="project-actions">
+                            <a href="projeto.html" class="btn btn-outline">Saber Mais</a>
+                            <button class="btn btn-primary" id="projectLoginBtn">Acessar Sistema</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills Section -->
+        <section class="skills">
+            <div class="container">
+                <h2 class="section-title">Tecnologias</h2>
+                <div class="skills-grid">
+                    <div class="skill-card">
+                        <div class="skill-icon">☁️</div>
+                        <h3>AWS Cloud</h3>
+                        <p>S3, Lambda, API Gateway, Cognito, CloudFront</p>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">💻</div>
+                        <h3>Frontend</h3>
+                        <p>JavaScript, HTML5, CSS3, Responsive Design</p>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">🗺️</div>
+                        <h3>Mapas</h3>
+                        <p>Leaflet, GeoJSON, Turf.js, Spatial Analysis</p>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">🔐</div>
+                        <h3>Autenticação</h3>
+                        <p>JWT, OAuth, AWS Cognito, Session Management</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Contato</h4>
+                    <p>📧 lucas.bruzzone@exemplo.com</p>
+                    <p>📱 (35) 99999-9999</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Links</h4>
+                    <a href="#" class="footer-link">LinkedIn</a>
+                    <a href="#" class="footer-link">GitHub</a>
+                    <a href="#" class="footer-link">Portfólio</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Localização</h4>
+                    <p>📍 São Sebastião do Paraíso, MG</p>
+                    <p>🇧🇷 Brasil</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Lucas Bruzzone. Desenvolvido com 💜</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal de Login -->
+    <div class="modal-overlay hidden" id="loginModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Acessar Sistema</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form class="login-form" id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Email ou usuário</label>
+                        <input type="text" id="email" placeholder="Digite seu email ou usuário" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Senha</label>
+                        <input type="password" id="password" placeholder="Digite sua senha" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full" id="submitLogin">
+                        Entrar
+                    </button>
+                    <div id="authStatus" class="auth-status"></div>
+                </form>
+            </div>
+        </div>
     </div>
-    
+
+    <!-- Scripts -->
     <script src="js/auth.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
