@@ -10,16 +10,47 @@
     <div class="container">
         <header>
             <h1>Example AWS App</h1>
+            <nav class="nav-menu hidden" id="navMenu">
+                <a href="index.html" class="active">Início</a>
+                <a href="map.html">Mapeamento</a>
+                <button id="logoutNavBtn" class="logout-btn">Sair</button>
+            </nav>
         </header>
         
         <main>
-            <section class="hero">
+            <section class="auth" id="authSection">
+                <div class="auth-form">
+                    <h3>Faça seu login</h3>
+                    <div class="form-group">
+                        <input type="text" id="email" placeholder="Email ou nome de usuário" required autocomplete="username">
+                        <input type="password" id="password" placeholder="Digite sua senha" required autocomplete="current-password">
+                    </div>
+                    <button id="loginBtn">Entrar</button>
+                    <div id="authStatus"></div>
+                </div>
+            </section>
+
+            <section class="hero hidden" id="heroSection">
                 <h2>Bem-vindo!</h2>
-                <p>Este é um site estático hospedado no S3.</p>
-                <button id="testBtn">Testar API</button>
+                <p>Este é um site estático hospedado no S3 com autenticação AWS Cognito.</p>
+                <div class="feature-cards">
+                    <div class="feature-card">
+                        <h3>🗺️ Mapeamento</h3>
+                        <p>Cadastre e gerencie suas propriedades rurais com polígonos interativos no mapa.</p>
+                        <a href="map.html" class="btn">Acessar Mapeamento</a>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🔧 API de Teste</h3>
+                        <p>Teste a integração com a API AWS Lambda para validar a autenticação.</p>
+                        <button id="testBtn" class="btn">Testar API</button>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button id="logoutBtn" class="logout-btn">Sair</button>
+                </div>
             </section>
             
-            <section class="results" id="results" style="display: none;">
+            <section class="results" id="results">
                 <h3>Resultado da API:</h3>
                 <pre id="apiResponse"></pre>
             </section>
