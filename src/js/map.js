@@ -48,7 +48,13 @@ window.addEventListener('load', function() {
             
             initializeMap();
             setupEventListeners();
-            loadProperties();
+            
+            // Verificar conectividade e carregar propriedades
+            checkAPIConnection().then(connected => {
+                if (connected) {
+                    loadProperties();
+                }
+            });
             
         } catch (error) {
             console.error('Erro de carregamento:', error);
@@ -408,9 +414,13 @@ function updatePropertiesList() {
             <p><strong>Área:</strong> ${property.area} hectares</p>
             <p><strong>Perímetro:</strong> ${property.perimeter} metros</p>
             ${property.description ? `<p><strong>Descrição:</strong> ${property.description}</p>` : ''}
+            <p class="property-date"><strong>Criado em:</strong> ${formatDate(property.createdAt)}</p>
             <div class="property-actions">
                 <button class="btn btn-small btn-success" onclick="zoomToProperty('${property.id}')">
                     Ver no Mapa
+                </button>
+                <button class="btn btn-small" onclick="editProperty('${property.id}')">
+                    Editar
                 </button>
                 <button class="btn btn-small btn-danger" onclick="deleteProperty('${property.id}')">
                     Excluir
@@ -418,6 +428,129 @@ function updatePropertiesList() {
             </div>
         </div>
     `).join('');
+}
+
+// Editar propriedade
+async function editProperty(propertyId) {
+    const property = properties.find(p => p.id === propertyId);
+    if (!property) {
+        showStatus('Propriedade não encontrada.', 'error');
+        return;
+    }
+    
+    // Preencher formulário com dados atuais
+    propertyNameInput.value = property.name;
+    propertyTypeSelect.value = property.type;
+    propertyDescriptionInput.value = property.description || '';
+    calculatedAreaSpan.textContent = property.area;
+    calculatedPerimeterSpan.textContent = property.perimeter;
+    
+    // Encontrar polígono no mapa
+    let targetLayer = null;
+    drawnItems.eachLayer(layer => {
+        if (layer.propertyData && layer.propertyData.id === propertyId) {
+            targetLayer = layer;
+        }
+    });
+    
+    if (targetLayer) {
+        currentPolygon = targetLayer;
+        map.fitBounds(targetLayer.getBounds());
+        targetLayer.openPopup();
+    }
+    
+    // Mostrar formulário em modo edição
+    propertyForm.classList.remove('hidden');
+    savePropertyBtn.textContent = 'Atualizar Propriedade';
+    savePropertyBtn.onclick = () => handleUpdateProperty(propertyId);
+    
+    // Adicionar botão cancelar
+    cancelFormBtn.textContent = 'Cancelar Edição';
+    cancelFormBtn.onclick = () => {
+        hidePropertyForm();
+        resetFormToCreateMode();
+    };
+    
+    propertyNameInput.focus();
+    showStatus('Modo de edição ativado. Modifique os dados e clique em "Atualizar".', 'info');
+}
+
+// Atualizar propriedade existente
+async function handleUpdateProperty(propertyId) {
+    const name = propertyNameInput.value.trim();
+    const type = propertyTypeSelect.value;
+    const description = propertyDescriptionInput.value.trim();
+    
+    if (!name) {
+        showStatus('Por favor, digite o nome da propriedade.', 'error');
+        propertyNameInput.focus();
+        return;
+    }
+    
+    // Preparar dados para atualização
+    const updateData = {
+        name: name,
+        type: type,
+        description: description
+    };
+    
+    // Se o polígono foi modificado, incluir novas coordenadas
+    if (currentPolygon) {
+        const metrics = calculatePolygonMetrics(currentPolygon);
+        updateData.area = parseFloat(metrics.area);
+        updateData.perimeter = metrics.perimeter;
+        updateData.coordinates = metrics.coordinates;
+    }
+    
+    savePropertyBtn.disabled = true;
+    savePropertyBtn.textContent = 'Atualizando...';
+    
+    try {
+        // Chamada para API
+        const updatedProperty = await updatePropertyFromAPI(propertyId, updateData);
+        
+        // Atualizar na lista local
+        const index = properties.findIndex(p => p.id === propertyId);
+        if (index !== -1) {
+            properties[index] = updatedProperty;
+        }
+        
+        // Atualizar polígono no mapa
+        if (currentPolygon) {
+            currentPolygon.propertyData = updatedProperty;
+            currentPolygon.setPopupContent(`
+                <div class="popup-content">
+                    <strong>${updatedProperty.name}</strong><br>
+                    Tipo: ${capitalizeFirst(updatedProperty.type)}<br>
+                    Área: ${updatedProperty.area} hectares<br>
+                    Perímetro: ${updatedProperty.perimeter} metros<br>
+                    ${updatedProperty.description ? `<em>${updatedProperty.description}</em>` : ''}
+                </div>
+            `);
+        }
+        
+        hidePropertyForm();
+        resetFormToCreateMode();
+        updatePropertiesList();
+        currentPolygon = null;
+        
+        showStatus(`Propriedade "${name}" atualizada com sucesso!`, 'success');
+        
+    } catch (error) {
+        console.error('Erro ao atualizar propriedade:', error);
+        showStatus(`Erro ao atualizar: ${error.message}`, 'error');
+    } finally {
+        savePropertyBtn.disabled = false;
+        savePropertyBtn.textContent = 'Atualizar Propriedade';
+    }
+}
+
+// Resetar formulário para modo de criação
+function resetFormToCreateMode() {
+    savePropertyBtn.textContent = 'Salvar Propriedade';
+    savePropertyBtn.onclick = handleSaveProperty;
+    cancelFormBtn.textContent = 'Cancelar';
+    cancelFormBtn.onclick = hidePropertyForm;
 }
 
 // Focar em propriedade no mapa
@@ -514,4 +647,58 @@ function generateId() {
 
 function capitalizeFirst(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function formatDate(dateString) {
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (error) {
+        return 'Data inválida';
+    }
+}
+
+// Verificar conectividade com a API
+async function checkAPIConnection() {
+    try {
+        const token = auth.getToken();
+        if (!token) {
+            showStatus('Token de autenticação não encontrado. Faça login novamente.', 'error');
+            return false;
+        }
+        
+        // Fazer uma requisição simples para verificar conectividade
+        const response = await fetch(PROPERTIES_API_URL, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.status === 401) {
+            showStatus('Sessão expirada. Redirecionando para login...', 'error');
+            setTimeout(() => {
+                auth.signOut();
+                window.location.href = 'index.html';
+            }, 2000);
+            return false;
+        }
+        
+        if (!response.ok) {
+            throw new Error(`API indisponível: ${response.status}`);
+        }
+        
+        return true;
+        
+    } catch (error) {
+        console.error('Erro ao verificar API:', error);
+        showStatus('Erro de conectividade com o servidor. Tente novamente.', 'error');
+        return false;
+    }
 }
