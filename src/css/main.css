@@ -7,12 +7,16 @@
 
 :root {
     /* Colors */
-    --primary: #667eea;
-    --primary-dark: #5a67d8;
-    --secondary: #764ba2;
-    --accent: #f093fb;
-    --success: #48bb78;
-    --error: #f56565;
+
+    --primary: #7c3aed;
+    --secondary: #f59e0b;
+    --accent: #ec4899;
+    --success: #059669;
+    --warning: #d97706;
+    --error: #dc2626;
+                    
+                        
+                        
     --warning: #ed8936;
     
     /* Grays */
@@ -371,9 +375,12 @@ a:hover {
 .hero-subtitle {
     font-size: 1.25rem;
     margin-bottom: var(--space-xl);
-    opacity: 0.9;
+    opacity: 1; /* Era 0.9 */
     line-height: 1.6;
+    color: #ffffff; /* Força branco puro */
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Adiciona sombra para melhor legibilidade */
 }
+
 
 .hero-actions {
     display: flex;
