@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema Rural</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+    <!-- Header Global -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <a href="/">Lucas Bruzzone</a>
+            </div>
+            <nav class="nav">
+                <a href="/" class="nav-link">Home</a>
+                <a href="projeto.html" class="nav-link">Projeto</a>
+            </nav>
+            <div class="auth-section">
+                <div class="user-menu" id="userMenu">
+                    <button class="user-avatar" id="userAvatar">
+                        <span id="userInitial">U</span>
+                    </button>
+                    <div class="dropdown" id="userDropdown">
+                        <a href="dashboard.html" class="dropdown-item active">
+                            <span class="icon">📊</span> Dashboard
+                        </a>
+                        <a href="mapeamento.html" class="dropdown-item">
+                            <span class="icon">🗺️</span> Mapeamento
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item logout-btn" id="logoutBtn">
+                            <span class="icon">🚪</span> Sair
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main dashboard-main">
+        <div class="container">
+            <!-- Dashboard Header -->
+            <section class="dashboard-header">
+                <h1>Dashboard</h1>
+                <p>Visão geral do seu sistema de propriedades rurais</p>
+            </section>
+
+            <!-- Quick Stats -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🏡</div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="totalProperties">0</div>
+                        <div class="stat-label">Propriedades</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📐</div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="totalArea">0</div>
+                        <div class="stat-label">Hectares</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📏</div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="totalPerimeter">0</div>
+                        <div class="stat-label">Km Perímetro</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="averageArea">0</div>
+                        <div class="stat-label">Média/Hectares</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="actions-section">
+                <h2>Ações Rápidas</h2>
+                <div class="actions-grid">
+                    <div class="action-card">
+                        <div class="action-icon">🗺️</div>
+                        <h3>Novo Mapeamento</h3>
+                        <p>Desenhe uma nova propriedade no mapa interativo</p>
+                        <a href="mapeamento.html" class="btn btn-primary">Começar</a>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-icon">📊</div>
+                        <h3>Relatórios</h3>
+                        <p>Visualize dados e métricas das suas propriedades</p>
+                        <button class="btn btn-outline" disabled>Em Breve</button>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-icon">⚙️</div>
+                        <h3>Configurações</h3>
+                        <p>Gerencie sua conta e preferências do sistema</p>
+                        <button class="btn btn-outline" disabled>Em Breve</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Properties -->
+            <section class="recent-section">
+                <div class="section-header">
+                    <h2>Propriedades Recentes</h2>
+                    <a href="mapeamento.html" class="btn btn-outline btn-small">Ver Todas</a>
+                </div>
+                <div class="recent-properties" id="recentProperties">
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <p>Carregando propriedades...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- System Info -->
+            <section class="system-info">
+                <h2>Informações do Sistema</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Versão:</span>
+                        <span class="info-value">1.0.0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Último Acesso:</span>
+                        <span class="info-value" id="lastAccess">Carregando...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Status:</span>
+                        <span class="info-value status-online">🟢 Online</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Tecnologia:</span>
+                        <span class="info-value">AWS + JavaScript</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // Dashboard-specific functionality
+        class Dashboard {
+            constructor() {
+                this.properties = [];
+                this.init();
+            }
+
+            init() {
+                // Check auth first
+                if (!auth.isAuthenticated() || !auth.isTokenValid()) {
+                    window.location.href = '/';
+                    return;
+                }
+                
+                this.loadDashboardData();
+                this.updateLastAccess();
+            }
+
+            async loadDashboardData() {
+                try {
+                    await this.loadProperties();
+                    this.updateStats();
+                    this.renderRecentProperties();
+                } catch (error) {
+                    console.error('Dashboard error:', error);
+                    this.showDemoData();
+                }
+            }
+
+            async loadProperties() {
+                const token = auth.getToken();
+                if (!token) throw new Error('No auth token');
+
+                try {
+                    const response = await fetch('https://nfvbev7jgc.execute-api.us-east-1.amazonaws.com/devops/properties', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.properties = data.properties || [];
+                    } else {
+                        this.properties = [];
+                    }
+                } catch (error) {
+                    console.log('API not available, using demo data');
+                    this.showDemoData();
+                }
+            }
+
+            showDemoData() {
+                this.properties = [
+                    {
+                        id: '1',
+                        name: 'Fazenda Demo',
+                        type: 'fazenda',
+                        area: 45.7,
+                        perimeter: 2800,
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: '2',
+                        name: 'Sítio Exemplo',
+                        type: 'sitio',
+                        area: 12.3,
+                        perimeter: 1450,
+                        createdAt: new Date(Date.now() - 86400000).toISOString()
+                    }
+                ];
+                this.updateStats();
+                this.renderRecentProperties();
+            }
+
+            updateStats() {
+                const totalProperties = this.properties.length;
+                const totalArea = this.properties.reduce((sum, p) => sum + (p.area || 0), 0);
+                const totalPerimeter = this.properties.reduce((sum, p) => sum + (p.perimeter || 0), 0);
+                const averageArea = totalProperties > 0 ? totalArea / totalProperties : 0;
+
+                document.getElementById('totalProperties').textContent = totalProperties;
+                document.getElementById('totalArea').textContent = totalArea.toFixed(1);
+                document.getElementById('totalPerimeter').textContent = (totalPerimeter / 1000).toFixed(1);
+                document.getElementById('averageArea').textContent = averageArea.toFixed(1);
+            }
+
+            updateLastAccess() {
+                const now = new Date();
+                const formatted = now.toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                const lastAccessEl = document.getElementById('lastAccess');
+                if (lastAccessEl) {
+                    lastAccessEl.textContent = formatted;
+                }
+            }
+
+            renderRecentProperties() {
+                const container = document.getElementById('recentProperties');
+                if (!container) return;
+                
+                if (this.properties.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">🗺️</div>
+                            <h3>Nenhuma propriedade cadastrada</h3>
+                            <p>Comece criando sua primeira propriedade no mapeamento</p>
+                            <a href="mapeamento.html" class="btn btn-primary">Criar Propriedade</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const recent = this.properties.slice(0, 3);
+                container.innerHTML = recent.map(prop => `
+                    <div class="property-summary">
+                        <div class="property-header">
+                            <h4>${prop.name}</h4>
+                            <span class="property-type">${this.capitalizeFirst(prop.type)}</span>
+                        </div>
+                        <div class="property-metrics">
+                            <span>📐 ${prop.area} ha</span>
+                            <span>📏 ${(prop.perimeter / 1000).toFixed(1)} km</span>
+                        </div>
+                        <div class="property-date">
+                            Criado em ${new Date(prop.createdAt).toLocaleDateString('pt-BR')}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            capitalizeFirst(str) {
+                return str.charAt(0).toUpperCase() + str.slice(1);
+            }
+        }
+
+        // Initialize dashboard when ready
+        document.addEventListener('DOMContentLoaded', () => {
+            new Dashboard();
+        });
+    </script>
+</body>
+</html>
