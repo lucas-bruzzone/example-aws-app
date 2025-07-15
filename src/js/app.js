@@ -6,6 +6,7 @@ const heroSection = document.getElementById('heroSection');
 const resultsSection = document.getElementById('results');
 const authStatus = document.getElementById('authStatus');
 const apiResponse = document.getElementById('apiResponse');
+const navMenu = document.getElementById('navMenu');
 
 // Form elements
 const usernameInput = document.getElementById('email'); // ID mantido como 'email' por compatibilidade
@@ -13,6 +14,7 @@ const passwordInput = document.getElementById('password');
 const loginBtn = document.getElementById('loginBtn');
 const testBtn = document.getElementById('testBtn');
 const logoutBtn = document.getElementById('logoutBtn');
+const logoutNavBtn = document.getElementById('logoutNavBtn');
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
@@ -158,14 +160,17 @@ testBtn.addEventListener('click', async () => {
     }
 });
 
-// Logout handler
-logoutBtn.addEventListener('click', () => {
+// Logout handlers
+logoutBtn.addEventListener('click', handleLogout);
+logoutNavBtn.addEventListener('click', handleLogout);
+
+function handleLogout() {
     auth.signOut();
     clearForm();
     clearApiResponse();
     updateUI();
     showAuthStatus('Logout realizado com sucesso.', 'success');
-});
+}
 
 // Enter key support
 usernameInput.addEventListener('keypress', (e) => {
@@ -182,6 +187,7 @@ function updateUI() {
     
     authSection.classList.toggle('hidden', isAuthenticated);
     heroSection.classList.toggle('hidden', !isAuthenticated);
+    navMenu.classList.toggle('hidden', !isAuthenticated);
     
     if (isAuthenticated) {
         clearAuthStatus();

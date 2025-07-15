@@ -10,6 +10,11 @@
     <div class="container">
         <header>
             <h1>Example AWS App</h1>
+            <nav class="nav-menu hidden" id="navMenu">
+                <a href="index.html" class="active">Início</a>
+                <a href="map.html">Mapeamento</a>
+                <button id="logoutNavBtn" class="logout-btn">Sair</button>
+            </nav>
         </header>
         
         <main>
@@ -28,8 +33,19 @@
             <section class="hero hidden" id="heroSection">
                 <h2>Bem-vindo!</h2>
                 <p>Este é um site estático hospedado no S3 com autenticação AWS Cognito.</p>
+                <div class="feature-cards">
+                    <div class="feature-card">
+                        <h3>🗺️ Mapeamento</h3>
+                        <p>Cadastre e gerencie suas propriedades rurais com polígonos interativos no mapa.</p>
+                        <a href="map.html" class="btn">Acessar Mapeamento</a>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🔧 API de Teste</h3>
+                        <p>Teste a integração com a API AWS Lambda para validar a autenticação.</p>
+                        <button id="testBtn" class="btn">Testar API</button>
+                    </div>
+                </div>
                 <div class="btn-group">
-                    <button id="testBtn">Testar API</button>
                     <button id="logoutBtn" class="logout-btn">Sair</button>
                 </div>
             </section>
