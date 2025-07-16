@@ -55,12 +55,60 @@
     background: var(--gray-100);
 }
 
+/* Modal Tabs */
+.modal-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--gray-50);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: var(--space-md);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--gray-600);
+    transition: var(--transition);
+    position: relative;
+}
+
+.tab-btn.active {
+    background: white;
+    color: var(--primary);
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary);
+}
+
+.tab-btn:hover {
+    background: var(--gray-100);
+}
+
+.tab-btn.active:hover {
+    background: white;
+}
+
 .modal-body {
     padding: var(--space-lg);
 }
 
 /* Form Components */
-.login-form {
+.auth-form {
+    width: 100%;
+}
+
+.login-form,
+.signup-form,
+.confirmation-form {
     display: flex;
     flex-direction: column;
     gap: var(--space-lg);
@@ -102,6 +150,66 @@
     color: var(--gray-400);
 }
 
+/* Password Validation */
+.password-hint {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    margin-top: var(--space-xs);
+    transition: var(--transition);
+}
+
+.password-hint.error {
+    color: var(--error);
+    font-weight: 500;
+}
+
+/* Confirmation Header */
+.confirmation-header {
+    text-align: center;
+    margin-bottom: var(--space-lg);
+}
+
+.confirmation-header h4 {
+    color: var(--primary);
+    margin-bottom: var(--space-sm);
+    font-size: 1.2rem;
+}
+
+.confirmation-header p {
+    color: var(--gray-600);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Auth Switch */
+.auth-switch {
+    text-align: center;
+    margin-top: var(--space-lg);
+    font-size: 0.9rem;
+    color: var(--gray-600);
+}
+
+.link-btn {
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    font-weight: 500;
+    text-decoration: underline;
+    padding: 0;
+    font-size: inherit;
+}
+
+.link-btn:hover {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.link-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* Auth Status */
 .auth-status {
     padding: var(--space-md);
@@ -110,6 +218,7 @@
     font-weight: 500;
     font-size: 0.9rem;
     transition: var(--transition);
+    margin-top: var(--space-md);
 }
 
 .auth-status.success {
@@ -124,6 +233,11 @@
 
 .auth-status.warning {
     background: var(--warning);
+    color: white;
+}
+
+.auth-status.info {
+    background: #3b82f6;
     color: white;
 }
 
@@ -369,6 +483,25 @@
     color: #991b1b;
 }
 
+/* Toast Specific Styles */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+
+.toast {
+    pointer-events: auto;
+    min-width: 200px;
+    max-width: 400px;
+    word-break: break-word;
+}
+
 /* Animations */
 @keyframes fadeIn {
     from { opacity: 0; }
@@ -419,6 +552,15 @@
         padding: var(--space-md);
     }
     
+    .modal-tabs {
+        display: flex;
+    }
+    
+    .tab-btn {
+        padding: var(--space-sm) var(--space-md);
+        font-size: 0.9rem;
+    }
+    
     .info-grid {
         grid-template-columns: 1fr;
     }
@@ -428,6 +570,16 @@
         align-items: flex-start;
         gap: var(--space-xs);
     }
+    
+    .toast-container {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+    }
+    
+    .toast {
+        max-width: none;
+    }
 }
 
 @media (max-width: 480px) {
@@ -435,6 +587,7 @@
     .form-group select,
     .form-group textarea {
         padding: var(--space-sm);
+        font-size: 16px; /* Prevent zoom on iOS */
     }
     
     .btn {
@@ -444,5 +597,18 @@
     .status-badge {
         font-size: 0.7rem;
         padding: 2px var(--space-sm);
+    }
+    
+    .modal-body {
+        padding: var(--space-sm);
+    }
+    
+    .confirmation-header h4 {
+        font-size: 1.1rem;
+    }
+    
+    .tab-btn {
+        padding: var(--space-sm);
+        font-size: 0.85rem;
     }
 }

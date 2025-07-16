@@ -11,6 +11,7 @@ class CognitoAuth {
         this.idToken = localStorage.getItem('idToken');
         this.refreshToken = localStorage.getItem('refreshToken');
         this.currentUsername = null;
+        this.pendingConfirmationUsername = null;
     }
 
     async signUp(username, password) {
@@ -29,9 +30,52 @@ class CognitoAuth {
                 UserAttributes: [
                     {
                         Name: 'email',
-                        Value: username // Se for email, será usado aqui
+                        Value: username
                     }
                 ]
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.UserSub) {
+            this.pendingConfirmationUsername = username;
+        }
+        
+        return data;
+    }
+
+    async confirmSignUp(username, confirmationCode) {
+        const url = `https://cognito-idp.${COGNITO_CONFIG.region}.amazonaws.com/`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-amz-json-1.1',
+                'X-Amz-Target': 'AWSCognitoIdentityProviderService.ConfirmSignUp'
+            },
+            body: JSON.stringify({
+                ClientId: COGNITO_CONFIG.clientId,
+                Username: username,
+                ConfirmationCode: confirmationCode
+            })
+        });
+
+        return await response.json();
+    }
+
+    async resendConfirmationCode(username) {
+        const url = `https://cognito-idp.${COGNITO_CONFIG.region}.amazonaws.com/`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-amz-json-1.1',
+                'X-Amz-Target': 'AWSCognitoIdentityProviderService.ResendConfirmationCode'
+            },
+            body: JSON.stringify({
+                ClientId: COGNITO_CONFIG.clientId,
+                Username: username
             })
         });
 
@@ -117,6 +161,7 @@ class CognitoAuth {
         this.idToken = null;
         this.refreshToken = null;
         this.currentUsername = null;
+        this.pendingConfirmationUsername = null;
         
         // Limpar localStorage
         localStorage.removeItem('accessToken');
@@ -158,6 +203,12 @@ class CognitoAuth {
             console.error('Erro ao validar token:', error);
             return false;
         }
+    }
+
+    // Validar senha
+    validatePassword(password) {
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+        return regex.test(password);
     }
 }
 
