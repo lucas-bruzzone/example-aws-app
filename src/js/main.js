@@ -50,22 +50,36 @@ class App {
     }
 
     updateAuthUI() {
+        console.log('🔄 updateAuthUI called');
         const loginBtn = document.getElementById('loginBtn');
         const userMenu = document.getElementById('userMenu');
         
+        console.log('🔐 Auth status:', {
+            isAuthenticated: auth.isAuthenticated(),
+            isTokenValid: auth.isTokenValid()
+        });
+        
         if (auth.isAuthenticated() && auth.isTokenValid()) {
+            console.log('✅ User is authenticated');
             // Show user menu, hide login button
             if (loginBtn) loginBtn.style.display = 'none';
             if (userMenu) {
                 userMenu.classList.remove('hidden');
                 userMenu.style.display = 'block';
                 
-                // Update user initial
-                if (window.userMenu && auth.currentUsername) {
-                    window.userMenu.updateUser(auth.currentUsername);
+                // Direct avatar update (fallback if window.userMenu not ready)
+                this.updateAvatarDirect();
+                
+                // Also try via component if available
+                if (window.userMenu) {
+                    const userInfo = auth.getUserInfo();
+                    if (userInfo) {
+                        window.userMenu.updateUser(userInfo);
+                    }
                 }
             }
         } else {
+            console.log('❌ User not authenticated');
             // Show login button, hide user menu
             if (loginBtn) {
                 loginBtn.style.display = 'block';
@@ -74,6 +88,21 @@ class App {
             if (userMenu) {
                 userMenu.classList.add('hidden');
                 userMenu.style.display = 'none';
+            }
+        }
+    }
+
+    updateAvatarDirect() {
+        const userInitial = document.getElementById('userInitial');
+        if (userInitial) {
+            const userInfo = auth.getUserInfo();
+            if (userInfo) {
+                const initial = userInfo.name ? userInfo.name.charAt(0) : 
+                               userInfo.email ? userInfo.email.charAt(0) :
+                               userInfo.username ? userInfo.username.charAt(0) : 'U';
+                
+                userInitial.textContent = initial.toUpperCase();
+                console.log('✅ Avatar updated directly:', initial.toUpperCase());
             }
         }
     }

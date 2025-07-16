@@ -165,8 +165,23 @@
                     return;
                 }
                 
+                // Update user avatar with retry
+                this.updateUserAvatar();
+                
                 this.loadDashboardData();
                 this.updateLastAccess();
+            }
+
+            updateUserAvatar() {
+                if (window.userMenu) {
+                    const userInfo = auth.getUserInfo();
+                    if (userInfo) {
+                        window.userMenu.updateUser(userInfo);
+                    }
+                } else {
+                    // Retry after components load
+                    setTimeout(() => this.updateUserAvatar(), 200);
+                }
             }
 
             async loadDashboardData() {
