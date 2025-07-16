@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processando Login...</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .callback-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .callback-content {
+            background: rgba(255, 255, 255, 0.1);
+            padding: var(--space-3xl);
+            border-radius: var(--border-radius-xl);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto var(--space-lg);
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-content {
+            color: #ff6b6b;
+        }
+        
+        .success-content {
+            color: #51cf66;
+        }
+        
+        .callback-message {
+            font-size: 1.1rem;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .callback-details {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .retry-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: var(--space-sm) var(--space-lg);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .retry-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="callback-container">
+        <div class="callback-content">
+            <div id="loadingState">
+                <div class="spinner"></div>
+                <h2>Processando Login</h2>
+                <p class="callback-message">Finalizando autenticação...</p>
+                <p class="callback-details">Aguarde enquanto validamos suas credenciais.</p>
+            </div>
+            
+            <div id="errorState" style="display: none;">
+                <div class="error-content">
+                    <h2>❌ Erro no Login</h2>
+                    <p class="callback-message" id="errorMessage">Algo deu errado durante a autenticação.</p>
+                    <p class="callback-details">Tente fazer login novamente.</p>
+                    <button class="retry-btn" onclick="redirectToHome()">Voltar ao Início</button>
+                </div>
+            </div>
+            
+            <div id="successState" style="display: none;">
+                <div class="success-content">
+                    <h2>✅ Login Realizado</h2>
+                    <p class="callback-message">Redirecionando para o dashboard...</p>
+                    <p class="callback-details">Você será redirecionado automaticamente.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        // Configuração da página de callback OAuth
+        class CallbackProcessor {
+            constructor() {
+                this.urlParams = new URLSearchParams(window.location.search);
+                this.code = this.urlParams.get('code');
+                this.error = this.urlParams.get('error');
+                this.errorDescription = this.urlParams.get('error_description');
+                
+                this.init();
+            }
+
+            async init() {
+                console.log('Callback processor iniciado');
+                
+                // Verificar se há erro na URL
+                if (this.error) {
+                    this.showError(`Erro de autorização: ${this.errorDescription || this.error}`);
+                    return;
+                }
+                
+                // Verificar se há código
+                if (!this.code) {
+                    this.showError('Código de autorização não encontrado na URL');
+                    return;
+                }
+                
+                console.log('Código OAuth recebido, trocando por tokens...');
+                
+                try {
+                    await this.exchangeCodeForTokens();
+                } catch (error) {
+                    console.error('Erro no processamento do callback:', error);
+                    this.showError(`Erro ao processar login: ${error.message}`);
+                }
+            }
+
+            async exchangeCodeForTokens() {
+                try {
+                    const result = await auth.exchangeCodeForTokens(this.code);
+                    
+                    if (result.success) {
+                        console.log('Tokens obtidos com sucesso');
+                        this.showSuccess();
+                        
+                        // Aguardar um pouco e redirecionar
+                        setTimeout(() => {
+                            window.location.href = '/dashboard.html';
+                        }, 1500);
+                        
+                    } else {
+                        throw new Error(result.error || 'Falha na troca de tokens');
+                    }
+                } catch (error) {
+                    throw new Error(`Falha na autenticação: ${error.message}`);
+                }
+            }
+
+            showError(message) {
+                console.error('Callback error:', message);
+                
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('successState').style.display = 'none';
+                document.getElementById('errorState').style.display = 'block';
+                
+                const errorElement = document.getElementById('errorMessage');
+                if (errorElement) {
+                    errorElement.textContent = message;
+                }
+                
+                // Auto-redirect após erro
+                setTimeout(() => {
+                    this.redirectToHome();
+                }, 5000);
+            }
+
+            showSuccess() {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').style.display = 'none';
+                document.getElementById('successState').style.display = 'block';
+            }
+
+            redirectToHome() {
+                window.location.href = '/';
+            }
+        }
+
+        // Função global para botão de retry
+        function redirectToHome() {
+            window.location.href = '/';
+        }
+
+        // Inicializar quando DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verificar se auth está disponível
+            if (typeof auth === 'undefined') {
+                console.error('Auth module not loaded');
+                document.getElementById('errorMessage').textContent = 'Erro: Sistema de autenticação não carregado';
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').style.display = 'block';
+                return;
+            }
+            
+            // Inicializar processador
+            new CallbackProcessor();
+        });
+        
+        // Fallback para timeout
+        setTimeout(() => {
+            const loadingState = document.getElementById('loadingState');
+            if (loadingState && loadingState.style.display !== 'none') {
+                console.warn('Callback timeout reached');
+                document.getElementById('errorMessage').textContent = 'Timeout: Login demorou muito para processar';
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').style.display = 'block';
+            }
+        }, 10000); // 10 segundos timeout
+    </script>
+</body>
+</html>

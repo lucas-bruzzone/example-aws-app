@@ -1,8 +1,9 @@
 // Configurações do Cognito
 const COGNITO_CONFIG = {
     region: 'us-east-1',
-    userPoolId: 'us-east-1_RLUfH7O3W',
-    clientId: '6jd9ubub29r6acikgeccl3o9nl'
+    userPoolId: 'us-east-1_EkIZzPSf0',
+    clientId: '45c9vf0elept4c6l50cv7eo67q',
+    domain: 'example-cloud-api-devops-auth'
 };
 
 class CognitoAuth {
@@ -12,6 +13,75 @@ class CognitoAuth {
         this.refreshToken = localStorage.getItem('refreshToken');
         this.currentUsername = null;
         this.pendingConfirmationUsername = null;
+    }
+
+    // Hosted UI Login (Cognito + Google)
+    signInWithHostedUI() {
+        const redirectUri = window.location.origin + '/callback.html';
+        const url = `https://${COGNITO_CONFIG.domain}.auth.${COGNITO_CONFIG.region}.amazoncognito.com/oauth2/authorize?` +
+            `client_id=${COGNITO_CONFIG.clientId}&` +
+            `response_type=code&` +
+            `scope=email+openid+profile&` +
+            `redirect_uri=${encodeURIComponent(redirectUri)}`;
+        
+        window.location.href = url;
+    }
+
+    // Google SSO direto
+    signInWithGoogle() {
+        const redirectUri = window.location.origin + '/callback.html';
+        const url = `https://${COGNITO_CONFIG.domain}.auth.${COGNITO_CONFIG.region}.amazoncognito.com/oauth2/authorize?` +
+            `client_id=${COGNITO_CONFIG.clientId}&` +
+            `response_type=code&` +
+            `scope=email+openid+profile&` +
+            `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+            `identity_provider=Google`;
+        
+        window.location.href = url;
+    }
+
+    // Trocar código OAuth por tokens
+    async exchangeCodeForTokens(code) {
+        const redirectUri = window.location.origin + '/callback.html';
+        
+        try {
+            const response = await fetch(`https://${COGNITO_CONFIG.domain}.auth.${COGNITO_CONFIG.region}.amazoncognito.com/oauth2/token`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    grant_type: 'authorization_code',
+                    client_id: COGNITO_CONFIG.clientId,
+                    code: code,
+                    redirect_uri: redirectUri
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                
+                this.accessToken = data.access_token;
+                this.idToken = data.id_token;
+                this.refreshToken = data.refresh_token;
+                
+                // Salvar tokens
+                localStorage.setItem('accessToken', this.accessToken);
+                localStorage.setItem('idToken', this.idToken);
+                localStorage.setItem('refreshToken', this.refreshToken);
+                
+                // Extrair username do token
+                const payload = JSON.parse(atob(this.idToken.split('.')[1]));
+                this.currentUsername = payload['cognito:username'] || payload.email || 'User';
+                
+                return { success: true };
+            } else {
+                throw new Error(`Token exchange failed: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Token exchange error:', error);
+            return { success: false, error: error.message };
+        }
     }
 
     async signUp(username, password) {
@@ -156,6 +226,7 @@ class CognitoAuth {
         return data;
     }
 
+    // Logout com Hosted UI
     signOut() {
         this.accessToken = null;
         this.idToken = null;
@@ -169,6 +240,16 @@ class CognitoAuth {
         localStorage.removeItem('refreshToken');
         
         console.log('User signed out, tokens cleared');
+        
+        // Logout do Hosted UI também
+        const logoutUrl = `https://${COGNITO_CONFIG.domain}.auth.${COGNITO_CONFIG.region}.amazoncognito.com/logout?` +
+            `client_id=${COGNITO_CONFIG.clientId}&` +
+            `logout_uri=${encodeURIComponent(window.location.origin)}`;
+        
+        // Redirecionar para logout completo
+        setTimeout(() => {
+            window.location.href = logoutUrl;
+        }, 100);
     }
 
     isAuthenticated() {
@@ -205,10 +286,68 @@ class CognitoAuth {
         }
     }
 
+    // Método para obter dados do usuário do token
+    getUserInfo() {
+        const token = this.getToken();
+        if (!token) return null;
+        
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return {
+                username: payload['cognito:username'] || payload.email || 'User',
+                email: payload.email,
+                name: payload.name,
+                sub: payload.sub
+            };
+        } catch (error) {
+            console.error('Erro ao extrair dados do usuário:', error);
+            return null;
+        }
+    }
+
     // Validar senha
     validatePassword(password) {
         const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
         return regex.test(password);
+    }
+
+    // Refresh token automaticamente
+    async refreshTokens() {
+        if (!this.refreshToken) {
+            throw new Error('No refresh token available');
+        }
+
+        try {
+            const response = await fetch(`https://${COGNITO_CONFIG.domain}.auth.${COGNITO_CONFIG.region}.amazoncognito.com/oauth2/token`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    grant_type: 'refresh_token',
+                    client_id: COGNITO_CONFIG.clientId,
+                    refresh_token: this.refreshToken
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                
+                this.accessToken = data.access_token;
+                this.idToken = data.id_token;
+                
+                localStorage.setItem('accessToken', this.accessToken);
+                localStorage.setItem('idToken', this.idToken);
+                
+                return true;
+            } else {
+                throw new Error('Token refresh failed');
+            }
+        } catch (error) {
+            console.error('Token refresh error:', error);
+            this.signOut();
+            return false;
+        }
     }
 }
 
