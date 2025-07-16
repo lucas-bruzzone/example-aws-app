@@ -254,7 +254,9 @@ class AuthForm {
                 this.clearForm();
                 
                 // Update UI and redirect
-                window.updateAuthUI();
+                if (window.updateAuthUI) {
+                    window.updateAuthUI();
+                }
                 setTimeout(() => {
                     window.location.href = 'dashboard.html';
                 }, 500);
@@ -271,7 +273,9 @@ class AuthForm {
                     if (finalResult.AuthenticationResult) {
                         this.showStatus('Senha alterada e login realizado!', 'success');
                         this.modal.close();
-                        window.updateAuthUI();
+                        if (window.updateAuthUI) {
+                            window.updateAuthUI();
+                        }
                         setTimeout(() => {
                             window.location.href = 'dashboard.html';
                         }, 500);
@@ -514,11 +518,26 @@ class UserMenu {
     }
 
     updateUser(userInfo) {
+        console.log('🎯 updateUser called with:', userInfo);
+        console.log('🔍 this.userInitial element:', this.userInitial);
+        
         if (this.userInitial && userInfo) {
+            // Prioritize email over UUID username for initial
             const initial = userInfo.name ? userInfo.name.charAt(0) : 
-                           userInfo.username ? userInfo.username.charAt(0) :
-                           userInfo.email ? userInfo.email.charAt(0) : 'U';
+                           userInfo.email ? userInfo.email.charAt(0) :
+                           userInfo.username ? userInfo.username.charAt(0) : 'U';
+            
+            console.log('🔤 Calculated initial from priority (name > email > username):', initial);
+            console.log('🔤 Setting to uppercase:', initial.toUpperCase());
+            
             this.userInitial.textContent = initial.toUpperCase();
+            
+            console.log('✅ Avatar updated. Current textContent:', this.userInitial.textContent);
+        } else {
+            console.log('❌ Cannot update user:', {
+                hasUserInitial: !!this.userInitial,
+                hasUserInfo: !!userInfo
+            });
         }
     }
 
@@ -680,6 +699,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.toast = new StatusToast();
     window.routeProtection = new RouteProtection();
     
+    console.log('Components initialized');
+    
+    // Update auth UI now that components are ready
+    if (window.updateAuthUI && auth.isAuthenticated()) {
+        console.log('🔄 Calling updateAuthUI after components ready');
+        window.updateAuthUI();
+    }
+    
     // Event delegation for logout as backup
     document.addEventListener('click', (e) => {
         const target = e.target;
@@ -699,6 +726,4 @@ document.addEventListener('DOMContentLoaded', () => {
             // Note: auth.signOut() já faz o redirect
         }
     });
-    
-    console.log('Components initialized');
 });
