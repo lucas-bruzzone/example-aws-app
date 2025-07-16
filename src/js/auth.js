@@ -21,18 +21,6 @@ class CognitoAuth {
         });
     }
 
-    // Hosted UI Login (Cognito + Google)
-    signInWithHostedUI() {
-        const redirectUri = window.location.origin + '/callback.html';
-        const url = `https://${COGNITO_CONFIG.domain}.auth.${COGNITO_CONFIG.region}.amazoncognito.com/oauth2/authorize?` +
-            `client_id=${COGNITO_CONFIG.clientId}&` +
-            `response_type=code&` +
-            `scope=email+openid+profile&` +
-            `redirect_uri=${encodeURIComponent(redirectUri)}`;
-        
-        window.location.href = url;
-    }
-
     // Google SSO direto
     signInWithGoogle() {
         const redirectUri = window.location.origin + '/callback.html';
@@ -235,30 +223,22 @@ class CognitoAuth {
         return data;
     }
 
-    // Logout com Hosted UI
     signOut() {
+        // Limpar tokens
         this.accessToken = null;
         this.idToken = null;
         this.refreshToken = null;
         this.currentUsername = null;
         this.pendingConfirmationUsername = null;
         
-        // Limpar localStorage
         localStorage.removeItem('accessToken');
         localStorage.removeItem('idToken');
         localStorage.removeItem('refreshToken');
         
         console.log('🚪 User signed out, tokens cleared');
         
-        // Logout do Hosted UI também
-        const logoutUrl = `https://${COGNITO_CONFIG.domain}.auth.${COGNITO_CONFIG.region}.amazoncognito.com/logout?` +
-            `client_id=${COGNITO_CONFIG.clientId}&` +
-            `logout_uri=${encodeURIComponent(window.location.origin)}`;
-        
-        // Redirecionar para logout completo
-        setTimeout(() => {
-            window.location.href = logoutUrl;
-        }, 100);
+        // Redirecionar diretamente para home sem logout do Cognito
+        window.location.href = '/';
     }
 
     isAuthenticated() {
