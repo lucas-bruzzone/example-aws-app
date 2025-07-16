@@ -87,20 +87,11 @@ class AuthForm {
 
     bindSSOEvents() {
         // Google SSO
-        const googleButtons = document.querySelectorAll('.btn-google, #googleSignInBtn');
+        const googleButtons = document.querySelectorAll('.btn-google-standard, #googleSignInBtn');
         googleButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 this.handleGoogleSignIn();
-            });
-        });
-
-        // Hosted UI Login
-        const hostedUIButtons = document.querySelectorAll('.btn-hosted-ui, #hostedUIBtn');
-        hostedUIButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.handleHostedUISignIn();
             });
         });
     }
