@@ -161,17 +161,6 @@ class AuthForm {
         }
     }
 
-    // Hosted UI Sign In
-    handleHostedUISignIn() {
-        try {
-            this.showStatus('Redirecionando para login...', 'info');
-            auth.signInWithHostedUI();
-        } catch (error) {
-            console.error('Hosted UI sign in error:', error);
-            this.showStatus('Erro ao acessar login', 'error');
-        }
-    }
-
     switchTab(tab) {
         this.currentTab = tab;
 
