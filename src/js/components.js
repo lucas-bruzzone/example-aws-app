@@ -32,10 +32,10 @@ class Modal {
         this.modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
         
-        // Focus first input
-        const firstInput = this.modal.querySelector('input:not([type="hidden"])');
-        if (firstInput) {
-            setTimeout(() => firstInput.focus(), 100);
+        // Focus first button
+        const firstButton = this.modal.querySelector('button:not([type="hidden"])');
+        if (firstButton) {
+            setTimeout(() => firstButton.focus(), 100);
         }
     }
 
@@ -49,7 +49,7 @@ class Modal {
     }
 }
 
-// Auth Form Component
+// Enhanced Auth Form Component with Google SSO
 class AuthForm {
     constructor(modalInstance) {
         this.modal = modalInstance;
@@ -76,26 +76,56 @@ class AuthForm {
     init() {
         this.bindTabEvents();
         this.bindFormEvents();
+        this.bindSSOEvents();
         this.setupPasswordValidation();
     }
 
     bindTabEvents() {
-        this.loginTabBtn.addEventListener('click', () => this.switchTab('login'));
-        this.signupTabBtn.addEventListener('click', () => this.switchTab('signup'));
+        if (this.loginTabBtn) this.loginTabBtn.addEventListener('click', () => this.switchTab('login'));
+        if (this.signupTabBtn) this.signupTabBtn.addEventListener('click', () => this.switchTab('signup'));
+    }
+
+    bindSSOEvents() {
+        // Google SSO
+        const googleButtons = document.querySelectorAll('.btn-google, #googleSignInBtn');
+        googleButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.handleGoogleSignIn();
+            });
+        });
+
+        // Hosted UI Login
+        const hostedUIButtons = document.querySelectorAll('.btn-hosted-ui, #hostedUIBtn');
+        hostedUIButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.handleHostedUISignIn();
+            });
+        });
     }
 
     bindFormEvents() {
         // Login form
-        this.loginForm.addEventListener('submit', (e) => this.handleLogin(e));
+        if (this.loginForm) {
+            this.loginForm.addEventListener('submit', (e) => this.handleLogin(e));
+        }
         
         // Signup form
-        this.signupForm.addEventListener('submit', (e) => this.handleSignup(e));
+        if (this.signupForm) {
+            this.signupForm.addEventListener('submit', (e) => this.handleSignup(e));
+        }
         
         // Confirmation form
-        this.confirmationForm.addEventListener('submit', (e) => this.handleConfirmation(e));
+        if (this.confirmationForm) {
+            this.confirmationForm.addEventListener('submit', (e) => this.handleConfirmation(e));
+        }
         
         // Resend code
-        document.getElementById('resendCodeBtn').addEventListener('click', () => this.handleResendCode());
+        const resendBtn = document.getElementById('resendCodeBtn');
+        if (resendBtn) {
+            resendBtn.addEventListener('click', () => this.handleResendCode());
+        }
         
         // Enter key navigation
         const emailInput = document.getElementById('email');
@@ -129,17 +159,39 @@ class AuthForm {
         }
     }
 
+    // Google Sign In
+    handleGoogleSignIn() {
+        try {
+            this.showStatus('Redirecionando para Google...', 'info');
+            auth.signInWithGoogle();
+        } catch (error) {
+            console.error('Google sign in error:', error);
+            this.showStatus('Erro ao acessar Google', 'error');
+        }
+    }
+
+    // Hosted UI Sign In
+    handleHostedUISignIn() {
+        try {
+            this.showStatus('Redirecionando para login...', 'info');
+            auth.signInWithHostedUI();
+        } catch (error) {
+            console.error('Hosted UI sign in error:', error);
+            this.showStatus('Erro ao acessar login', 'error');
+        }
+    }
+
     switchTab(tab) {
         this.currentTab = tab;
 
         // Update tabs
-        this.loginTabBtn.classList.toggle('active', tab === 'login');
-        this.signupTabBtn.classList.toggle('active', tab === 'signup');
+        if (this.loginTabBtn) this.loginTabBtn.classList.toggle('active', tab === 'login');
+        if (this.signupTabBtn) this.signupTabBtn.classList.toggle('active', tab === 'signup');
 
         // Update forms
-        this.loginFormDiv.classList.toggle('hidden', tab !== 'login');
-        this.signupFormDiv.classList.toggle('hidden', tab !== 'signup');
-        this.confirmationDiv.classList.add('hidden');
+        if (this.loginFormDiv) this.loginFormDiv.classList.toggle('hidden', tab !== 'login');
+        if (this.signupFormDiv) this.signupFormDiv.classList.toggle('hidden', tab !== 'signup');
+        if (this.confirmationDiv) this.confirmationDiv.classList.add('hidden');
 
         // Update modal title
         const modalTitle = document.getElementById('modalTitle');
@@ -153,17 +205,21 @@ class AuthForm {
         // Focus first input
         setTimeout(() => {
             const activeForm = tab === 'login' ? this.loginFormDiv : this.signupFormDiv;
-            const firstInput = activeForm.querySelector('input');
-            if (firstInput) firstInput.focus();
+            if (activeForm) {
+                const firstInput = activeForm.querySelector('input');
+                if (firstInput) firstInput.focus();
+            }
         }, 100);
     }
 
     showConfirmationForm() {
         // Hide tabs and forms
-        document.querySelector('.modal-tabs').style.display = 'none';
-        this.loginFormDiv.classList.add('hidden');
-        this.signupFormDiv.classList.add('hidden');
-        this.confirmationDiv.classList.remove('hidden');
+        const modalTabs = document.querySelector('.modal-tabs');
+        if (modalTabs) modalTabs.style.display = 'none';
+        
+        if (this.loginFormDiv) this.loginFormDiv.classList.add('hidden');
+        if (this.signupFormDiv) this.signupFormDiv.classList.add('hidden');
+        if (this.confirmationDiv) this.confirmationDiv.classList.remove('hidden');
         
         // Focus confirmation input
         setTimeout(() => {
@@ -174,16 +230,22 @@ class AuthForm {
 
     resetToLogin() {
         // Show tabs again
-        document.querySelector('.modal-tabs').style.display = 'flex';
+        const modalTabs = document.querySelector('.modal-tabs');
+        if (modalTabs) modalTabs.style.display = 'flex';
         this.switchTab('login');
     }
 
     async handleLogin(e) {
         e.preventDefault();
         
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value.trim();
+        const emailEl = document.getElementById('email');
+        const passwordEl = document.getElementById('password');
         const submitBtn = document.getElementById('submitLogin');
+        
+        if (!emailEl || !passwordEl || !submitBtn) return;
+        
+        const email = emailEl.value.trim();
+        const password = passwordEl.value.trim();
 
         if (!email || !password) {
             this.showStatus('Preencha todos os campos.', 'error');
@@ -239,10 +301,16 @@ class AuthForm {
     async handleSignup(e) {
         e.preventDefault();
         
-        const email = document.getElementById('signupEmail').value.trim();
-        const password = document.getElementById('signupPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
+        const emailEl = document.getElementById('signupEmail');
+        const passwordEl = document.getElementById('signupPassword');
+        const confirmPasswordEl = document.getElementById('confirmPassword');
         const submitBtn = document.getElementById('submitSignup');
+        
+        if (!emailEl || !passwordEl || !confirmPasswordEl || !submitBtn) return;
+        
+        const email = emailEl.value.trim();
+        const password = passwordEl.value;
+        const confirmPassword = confirmPasswordEl.value;
         
         if (!email || !password || !confirmPassword) {
             this.showStatus('Preencha todos os campos.', 'error');
@@ -297,8 +365,12 @@ class AuthForm {
     async handleConfirmation(e) {
         e.preventDefault();
         
-        const code = document.getElementById('confirmCode').value.trim();
+        const codeEl = document.getElementById('confirmCode');
         const submitBtn = document.getElementById('submitConfirm');
+        
+        if (!codeEl || !submitBtn) return;
+        
+        const code = codeEl.value.trim();
         
         if (!code) {
             this.showStatus('Digite o código de confirmação.', 'error');
@@ -340,6 +412,7 @@ class AuthForm {
 
     async handleResendCode() {
         const resendBtn = document.getElementById('resendCodeBtn');
+        if (!resendBtn) return;
         
         if (!auth.pendingConfirmationUsername) {
             this.showStatus('Erro: usuário não encontrado', 'error');
@@ -362,6 +435,7 @@ class AuthForm {
     }
 
     setLoading(button, loading, text) {
+        if (!button) return;
         button.disabled = loading;
         button.textContent = loading ? text : button.id.includes('Login') ? 'Entrar' : 
                              button.id.includes('Signup') ? 'Cadastrar' : 'Confirmar';
@@ -387,9 +461,9 @@ class AuthForm {
     }
 
     clearForm() {
-        this.loginForm.reset();
-        this.signupForm.reset();
-        this.confirmationForm.reset();
+        if (this.loginForm) this.loginForm.reset();
+        if (this.signupForm) this.signupForm.reset();
+        if (this.confirmationForm) this.confirmationForm.reset();
         this.clearStatus();
     }
 }
@@ -448,9 +522,12 @@ class UserMenu {
         }
     }
 
-    updateUser(username) {
-        if (this.userInitial && username) {
-            this.userInitial.textContent = username.charAt(0).toUpperCase();
+    updateUser(userInfo) {
+        if (this.userInitial && userInfo) {
+            const initial = userInfo.name ? userInfo.name.charAt(0) : 
+                           userInfo.username ? userInfo.username.charAt(0) :
+                           userInfo.email ? userInfo.email.charAt(0) : 'U';
+            this.userInitial.textContent = initial.toUpperCase();
         }
     }
 
@@ -468,10 +545,7 @@ class UserMenu {
             window.toast.show('Logout realizado com sucesso', 'success');
         }
         
-        // Redirect after delay
-        setTimeout(() => {
-            window.location.href = '/';
-        }, 500);
+        // Note: auth.signOut() já faz o redirect
     }
 }
 
@@ -631,9 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window.toast) {
                 window.toast.show('Logout realizado com sucesso', 'success');
             }
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 500);
+            // Note: auth.signOut() já faz o redirect
         }
     });
     
