@@ -23,7 +23,8 @@ class CognitoAuth {
             `response_type=code&` +
             `scope=email+openid+profile&` +
             `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-            `identity_provider=Google`;
+            `identity_provider=Google&` +
+            `prompt=select_account`;
         
         window.location.href = url;
     }
