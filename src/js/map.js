@@ -1,4 +1,4 @@
-// Simplified Map Controller
+// Simplified Map Controller with Satellite Support
 const PROPERTIES_API_URL = 'https://nfvbev7jgc.execute-api.us-east-1.amazonaws.com/devops/properties';
 
 let map;
@@ -36,9 +36,41 @@ function initializeMap() {
         // Create map
         map = L.map('map').setView([-21.206, -46.876], 13);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 19
+        // Define different tile layers
+        const baseMaps = {
+            "Mapa Padrão": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }),
+            
+            "Satélite": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '© Esri, Maxar, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community',
+                maxZoom: 19
+            }),
+            
+            "Satélite com Rótulos": L.layerGroup([
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: '© Esri, Maxar, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community',
+                    maxZoom: 19
+                }),
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19
+                })
+            ]),
+            
+            "Terreno": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '© Esri, HERE, Garmin, Intermap, increment P Corp., GEBCO, USGS, FAO, NPS, NRCAN, GeoBase, IGN, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), (c) OpenStreetMap contributors, and the GIS User Community',
+                maxZoom: 19
+            })
+        };
+
+        // Add default layer (Satellite)
+        baseMaps["Satélite"].addTo(map);
+
+        // Add layer control
+        L.control.layers(baseMaps, null, {
+            position: 'topright',
+            collapsed: false
         }).addTo(map);
 
         drawnItems = new L.FeatureGroup();
@@ -50,7 +82,7 @@ function initializeMap() {
         
         loadProperties();
         
-        showStatus('Mapa carregado!', 'success');
+        showStatus('Mapa carregado com imagem de satélite!', 'success');
         
     } catch (error) {
         showStatus(`Erro: ${error.message}`, 'error');
@@ -67,18 +99,18 @@ function setupDrawControls() {
             polygon: {
                 allowIntersection: false,
                 shapeOptions: {
-                    color: '#667eea',
+                    color: '#ff4444',
                     weight: 3,
-                    fillOpacity: 0.2,
-                    fillColor: '#667eea'
+                    fillOpacity: 0.3,
+                    fillColor: '#ff4444'
                 }
             },
             rectangle: {
                 shapeOptions: {
-                    color: '#667eea',
+                    color: '#ff4444',
                     weight: 3,
-                    fillOpacity: 0.2,
-                    fillColor: '#667eea'
+                    fillOpacity: 0.3,
+                    fillColor: '#ff4444'
                 }
             },
             polyline: false,
@@ -245,8 +277,10 @@ async function handleCreate() {
         const result = await response.json();
         
         currentPolygon.setStyle({
-            color: '#28a745',
-            fillColor: '#28a745'
+            color: '#00ff00',
+            fillColor: '#00ff00',
+            weight: 3,
+            fillOpacity: 0.3
         });
         
         currentPolygon.bindPopup(`
@@ -371,10 +405,10 @@ function updateMapProperties() {
             const latLngs = property.coordinates.slice(0, -1).map(coord => [coord[1], coord[0]]);
             
             const polygon = L.polygon(latLngs, {
-                color: '#28a745',
-                fillColor: '#28a745',
+                color: '#00ff00',
+                fillColor: '#00ff00',
                 weight: 3,
-                fillOpacity: 0.2
+                fillOpacity: 0.3
             });
             
             polygon.bindPopup(`
