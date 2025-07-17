@@ -71,10 +71,10 @@
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon">⭐</div>
+                    <div class="stat-icon">📋</div>
                     <div class="stat-content">
-                        <div class="stat-number" id="averageArea">0</div>
-                        <div class="stat-label">Média/Hectares</div>
+                        <div class="stat-number" id="selectedCount">0</div>
+                        <div class="stat-label">Selecionadas</div>
                     </div>
                 </div>
             </section>
@@ -91,37 +91,77 @@
                     </div>
                     <div class="skill-card">
                         <div class="skill-icon">📊</div>
-                        <h3>Relatórios</h3>
-                        <p>Visualize dados e métricas das suas propriedades</p>
-                        <button class="btn btn-outline" disabled>Em Breve</button>
+                        <h3>Gerar Relatório</h3>
+                        <p>Crie relatórios profissionais das propriedades selecionadas</p>
+                        <button class="btn btn-primary" id="generateReportBtn" disabled>
+                            📄 Gerar Relatório
+                        </button>
                     </div>
                     <div class="skill-card">
-                        <div class="skill-icon">⚙️</div>
-                        <h3>Configurações</h3>
-                        <p>Gerencie sua conta e preferências do sistema</p>
+                        <div class="skill-icon">📁</div>
+                        <h3>Importar CSV</h3>
+                        <p>Importe múltiplas propriedades via arquivo</p>
                         <button class="btn btn-outline" disabled>Em Breve</button>
                     </div>
                 </div>
             </section>
 
-            <!-- Recent Properties -->
-            <section class="recent-section">
+            <!-- Properties Management -->
+            <section class="properties-management">
                 <div class="card">
                     <div class="card-header">
                         <div class="section-header">
                             <div>
-                                <h2>Propriedades Recentes</h2>
-                                <p class="section-subtitle">Últimas propriedades cadastradas</p>
+                                <h2>Gerenciar Propriedades</h2>
+                                <p class="section-subtitle">Selecione propriedades para incluir no relatório</p>
                             </div>
-                            <a href="mapeamento.html" class="btn btn-outline btn-small">Ver Todas</a>
+                            <div class="selection-controls">
+                                <button class="btn btn-outline btn-small" id="selectAllBtn">
+                                    ✅ Selecionar Todas
+                                </button>
+                                <button class="btn btn-outline btn-small" id="clearSelectionBtn">
+                                    ❌ Limpar Seleção
+                                </button>
+                                <a href="mapeamento.html" class="btn btn-outline btn-small">Ver no Mapa</a>
+                            </div>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="recent-properties" id="recentProperties">
+                        <div class="properties-list" id="propertiesList">
                             <div class="loading-state">
                                 <div class="loading-spinner"></div>
                                 <p>Carregando propriedades...</p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Selected Properties Summary -->
+            <section class="selected-summary hidden" id="selectedSummary">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Propriedades Selecionadas para Relatório</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="selected-stats">
+                            <div class="selected-stat">
+                                <span class="stat-label">Total selecionadas:</span>
+                                <span class="stat-value" id="selectedTotal">0</span>
+                            </div>
+                            <div class="selected-stat">
+                                <span class="stat-label">Área total:</span>
+                                <span class="stat-value" id="selectedArea">0 ha</span>
+                            </div>
+                            <div class="selected-stat">
+                                <span class="stat-label">Perímetro total:</span>
+                                <span class="stat-value" id="selectedPerimeter">0 km</span>
+                            </div>
+                        </div>
+                        <div class="report-actions">
+                            <button class="btn btn-primary" id="confirmReportBtn">
+                                📄 Confirmar e Gerar Relatório
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -137,7 +177,7 @@
                         <div class="info-grid">
                             <div class="info-item">
                                 <span class="info-label">Versão:</span>
-                                <span class="info-value">1.0.0</span>
+                                <span class="info-value">1.2.0</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Último Acesso:</span>
@@ -149,7 +189,7 @@
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Tecnologia:</span>
-                                <span class="info-value">AWS + JavaScript</span>
+                                <span class="info-value">AWS Lambda + ReportLab + PDF</span>
                             </div>
                         </div>
                     </div>
@@ -158,15 +198,29 @@
         </div>
     </main>
 
+    <!-- Modal (necessário para components.js) -->
+    <div class="modal-overlay hidden" id="loginModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Sistema</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Modal placeholder - não deveria aparecer no dashboard</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="js/auth.js"></script>
     <script src="js/components.js"></script>
     <script src="js/main.js"></script>
     <script>
-        // Dashboard Controller
+        // Enhanced Dashboard Controller with Server-side PDF Report Generation
         class Dashboard {
             constructor() {
                 this.properties = [];
+                this.selectedProperties = new Set();
                 this.init();
             }
 
@@ -179,6 +233,19 @@
                 this.updateUserAvatar();
                 this.loadDashboardData();
                 this.updateLastAccess();
+                this.bindEvents();
+            }
+
+            bindEvents() {
+                // Selection controls
+                document.getElementById('selectAllBtn').addEventListener('click', () => this.selectAll());
+                document.getElementById('clearSelectionBtn').addEventListener('click', () => this.clearSelection());
+                
+                // Report generation
+                document.getElementById('generateReportBtn').addEventListener('click', () => this.showReportPreview());
+                document.getElementById('confirmReportBtn').addEventListener('click', () => this.generateReport());
+                
+                // Property list events will be bound when properties are rendered
             }
 
             updateUserAvatar() {
@@ -196,7 +263,7 @@
                 try {
                     await this.loadProperties();
                     this.updateStats();
-                    this.renderRecentProperties();
+                    this.renderPropertiesList();
                 } catch (error) {
                     this.showDemoData();
                 }
@@ -226,7 +293,7 @@
                 this.properties = [
                     {
                         id: '1',
-                        name: 'Fazenda Demo',
+                        name: 'Fazenda Demo Norte',
                         type: 'fazenda',
                         area: 45.7,
                         perimeter: 2800,
@@ -234,27 +301,262 @@
                     },
                     {
                         id: '2',
-                        name: 'Sítio Exemplo',
+                        name: 'Sítio Exemplo Sul',
                         type: 'sitio',
                         area: 12.3,
                         perimeter: 1450,
                         createdAt: new Date(Date.now() - 86400000).toISOString()
+                    },
+                    {
+                        id: '3',
+                        name: 'Chácara Demo',
+                        type: 'chacara',
+                        area: 8.5,
+                        perimeter: 920,
+                        createdAt: new Date(Date.now() - 172800000).toISOString()
                     }
                 ];
                 this.updateStats();
-                this.renderRecentProperties();
+                this.renderPropertiesList();
             }
 
             updateStats() {
                 const totalProperties = this.properties.length;
                 const totalArea = this.properties.reduce((sum, p) => sum + (p.area || 0), 0);
                 const totalPerimeter = this.properties.reduce((sum, p) => sum + (p.perimeter || 0), 0);
-                const averageArea = totalProperties > 0 ? totalArea / totalProperties : 0;
+                const selectedCount = this.selectedProperties.size;
 
                 document.getElementById('totalProperties').textContent = totalProperties;
                 document.getElementById('totalArea').textContent = totalArea.toFixed(1);
                 document.getElementById('totalPerimeter').textContent = (totalPerimeter / 1000).toFixed(1);
-                document.getElementById('averageArea').textContent = averageArea.toFixed(1);
+                document.getElementById('selectedCount').textContent = selectedCount;
+
+                // Enable/disable report button
+                const reportBtn = document.getElementById('generateReportBtn');
+                reportBtn.disabled = selectedCount === 0;
+                reportBtn.textContent = selectedCount > 0 ? 
+                    `📄 Gerar Relatório (${selectedCount})` : '📄 Gerar Relatório';
+            }
+
+            renderPropertiesList() {
+                const container = document.getElementById('propertiesList');
+                if (!container) return;
+                
+                if (this.properties.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">🗺️</div>
+                            <h3>Nenhuma propriedade cadastrada</h3>
+                            <p>Comece criando sua primeira propriedade no mapeamento</p>
+                            <a href="mapeamento.html" class="btn btn-primary">Criar Propriedade</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = this.properties.map(prop => `
+                    <div class="property-item" data-property-id="${prop.id}">
+                        <div class="property-selection">
+                            <label class="checkbox-container">
+                                <input type="checkbox" 
+                                       class="property-checkbox" 
+                                       data-property-id="${prop.id}"
+                                       ${this.selectedProperties.has(prop.id) ? 'checked' : ''}>
+                                <span class="checkmark"></span>
+                            </label>
+                        </div>
+                        <div class="property-content">
+                            <div class="property-header">
+                                <h4>${prop.name}</h4>
+                                <span class="property-type">${this.capitalizeFirst(prop.type)}</span>
+                            </div>
+                            <div class="property-metrics">
+                                <span>📐 ${prop.area} ha</span>
+                                <span>📏 ${(prop.perimeter / 1000).toFixed(1)} km</span>
+                            </div>
+                            <div class="property-date">
+                                Criado em ${new Date(prop.createdAt).toLocaleDateString('pt-BR')}
+                            </div>
+                        </div>
+                        <div class="property-actions">
+                            <button class="btn btn-small btn-outline" onclick="window.open('mapeamento.html', '_blank')">
+                                🗺️ Ver no Mapa
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Bind checkbox events
+                container.querySelectorAll('.property-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => {
+                        this.togglePropertySelection(e.target.dataset.propertyId, e.target.checked);
+                    });
+                });
+            }
+
+            togglePropertySelection(propertyId, selected) {
+                if (selected) {
+                    this.selectedProperties.add(propertyId);
+                } else {
+                    this.selectedProperties.delete(propertyId);
+                }
+                
+                this.updateStats();
+                this.updateSelectedSummary();
+            }
+
+            selectAll() {
+                this.properties.forEach(prop => {
+                    this.selectedProperties.add(prop.id);
+                });
+                
+                // Update checkboxes
+                document.querySelectorAll('.property-checkbox').forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                
+                this.updateStats();
+                this.updateSelectedSummary();
+            }
+
+            clearSelection() {
+                this.selectedProperties.clear();
+                
+                // Update checkboxes
+                document.querySelectorAll('.property-checkbox').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                
+                this.updateStats();
+                this.updateSelectedSummary();
+            }
+
+            updateSelectedSummary() {
+                const summarySection = document.getElementById('selectedSummary');
+                const selectedCount = this.selectedProperties.size;
+                
+                if (selectedCount === 0) {
+                    summarySection.classList.add('hidden');
+                    return;
+                }
+                
+                summarySection.classList.remove('hidden');
+                
+                // Calculate totals for selected properties
+                const selectedProps = this.properties.filter(p => this.selectedProperties.has(p.id));
+                const totalArea = selectedProps.reduce((sum, p) => sum + p.area, 0);
+                const totalPerimeter = selectedProps.reduce((sum, p) => sum + p.perimeter, 0);
+                
+                document.getElementById('selectedTotal').textContent = selectedCount;
+                document.getElementById('selectedArea').textContent = `${totalArea.toFixed(1)} ha`;
+                document.getElementById('selectedPerimeter').textContent = `${(totalPerimeter / 1000).toFixed(1)} km`;
+            }
+
+            showReportPreview() {
+                if (this.selectedProperties.size === 0) {
+                    if (window.toast) {
+                        window.toast.show('Selecione pelo menos uma propriedade', 'warning');
+                    }
+                    return;
+                }
+                
+                this.updateSelectedSummary();
+                
+                // Scroll to summary
+                document.getElementById('selectedSummary').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+
+            async generateReport() {
+                const selectedProps = this.properties.filter(p => this.selectedProperties.has(p.id));
+                
+                if (selectedProps.length === 0) {
+                    if (window.toast) {
+                        window.toast.show('Nenhuma propriedade selecionada', 'error');
+                    }
+                    return;
+                }
+
+                const confirmBtn = document.getElementById('confirmReportBtn');
+                confirmBtn.disabled = true;
+                confirmBtn.textContent = '⏳ Gerando relatório...';
+
+                try {
+                    // Chamar API Lambda para gerar PDF
+                    const propertyIds = selectedProps.map(p => p.id);
+                    
+                    const response = await fetch('https://nfvbev7jgc.execute-api.us-east-1.amazonaws.com/devops/properties/report', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${auth.getToken()}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            propertyIds: propertyIds
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `HTTP ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    // Fazer download do PDF
+                    this.downloadPDF(result.pdf, result.filename);
+                    
+                    if (window.toast) {
+                        window.toast.show(`Relatório PDF gerado: ${result.filename}`, 'success');
+                    }
+                    
+                } catch (error) {
+                    console.error('Erro ao gerar relatório:', error);
+                    if (window.toast) {
+                        window.toast.show(`Erro ao gerar relatório: ${error.message}`, 'error');
+                    }
+                } finally {
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = '📄 Confirmar e Gerar Relatório';
+                }
+            }
+
+            // Função auxiliar para download do PDF
+            downloadPDF(pdfBase64, filename) {
+                try {
+                    // Converter base64 para blob
+                    const byteCharacters = atob(pdfBase64);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], { type: 'application/pdf' });
+                    
+                    // Criar link de download
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    
+                    // Trigger download
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    // Limpar URL object
+                    window.URL.revokeObjectURL(url);
+                    
+                } catch (error) {
+                    console.error('Erro ao fazer download do PDF:', error);
+                    if (window.toast) {
+                        window.toast.show('Erro ao fazer download do arquivo', 'error');
+                    }
+                }
             }
 
             updateLastAccess() {
@@ -271,40 +573,6 @@
                 if (lastAccessEl) {
                     lastAccessEl.textContent = formatted;
                 }
-            }
-
-            renderRecentProperties() {
-                const container = document.getElementById('recentProperties');
-                if (!container) return;
-                
-                if (this.properties.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-icon">🗺️</div>
-                            <h3>Nenhuma propriedade cadastrada</h3>
-                            <p>Comece criando sua primeira propriedade no mapeamento</p>
-                            <a href="mapeamento.html" class="btn btn-primary">Criar Propriedade</a>
-                        </div>
-                    `;
-                    return;
-                }
-
-                const recent = this.properties.slice(0, 3);
-                container.innerHTML = recent.map(prop => `
-                    <div class="property-summary">
-                        <div class="property-header">
-                            <h4>${prop.name}</h4>
-                            <span class="property-type">${this.capitalizeFirst(prop.type)}</span>
-                        </div>
-                        <div class="property-metrics">
-                            <span>📐 ${prop.area} ha</span>
-                            <span>📏 ${(prop.perimeter / 1000).toFixed(1)} km</span>
-                        </div>
-                        <div class="property-date">
-                            Criado em ${new Date(prop.createdAt).toLocaleDateString('pt-BR')}
-                        </div>
-                    </div>
-                `).join('');
             }
 
             capitalizeFirst(str) {
@@ -325,142 +593,5 @@
             });
         });
     </script>
-
-    <style>
-        .dashboard-header {
-            text-align: center;
-            margin-bottom: var(--space-3xl);
-        }
-
-        .dashboard-header h1 {
-            font-size: 2.5rem;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: var(--space-md);
-        }
-
-        .actions-section {
-            margin-bottom: var(--space-3xl);
-        }
-
-        .actions-section h2 {
-            margin-bottom: var(--space-xl);
-            color: var(--gray-900);
-        }
-
-        .recent-section {
-            margin-bottom: var(--space-3xl);
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: var(--space-md);
-        }
-
-        .section-header h2 {
-            margin: 0;
-        }
-
-        .section-subtitle {
-            color: var(--gray-500);
-            font-size: 0.9rem;
-            margin: 0;
-        }
-
-        .property-summary {
-            padding: var(--space-lg);
-            border-bottom: 1px solid var(--gray-200);
-            transition: var(--transition);
-        }
-
-        .property-summary:last-child {
-            border-bottom: none;
-        }
-
-        .property-summary:hover {
-            background: var(--gray-50);
-        }
-
-        .property-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--space-md);
-            flex-wrap: wrap;
-            gap: var(--space-sm);
-        }
-
-        .property-header h4 {
-            color: var(--gray-900);
-            margin: 0;
-            font-size: 1.1rem;
-        }
-
-        .property-metrics {
-            display: flex;
-            gap: var(--space-lg);
-            margin-bottom: var(--space-sm);
-            flex-wrap: wrap;
-        }
-
-        .property-metrics span {
-            color: var(--gray-600);
-            font-size: 0.9rem;
-        }
-
-        .property-date {
-            color: var(--gray-500);
-            font-size: 0.8rem;
-            font-style: italic;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: var(--space-md);
-        }
-
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: var(--space-md);
-            background: var(--gray-50);
-            border-radius: var(--border-radius);
-            border-left: 3px solid var(--primary);
-        }
-
-        .info-label {
-            font-weight: 500;
-            color: var(--gray-600);
-        }
-
-        .info-value {
-            color: var(--gray-900);
-            font-weight: 600;
-        }
-
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-                gap: var(--space-md);
-            }
-            
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .info-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: var(--space-xs);
-            }
-        }
-    </style>
 </body>
 </html>
