@@ -4,20 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Sistema Rural</title>
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/pages.css">
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <!-- Header Global -->
+    <!-- Header -->
     <header class="header">
         <div class="header-container">
             <div class="logo">
-                <a href="/">Aplicação Demo</a>
+                <a href="/">Sistema Rural</a>
             </div>
             <nav class="nav">
                 <a href="/" class="nav-link">Home</a>
-                <a href="projeto.html" class="nav-link">Projeto</a>
             </nav>
             <div class="auth-section">
                 <div class="user-menu" id="userMenu">
@@ -85,21 +82,21 @@
             <!-- Quick Actions -->
             <section class="actions-section">
                 <h2>Ações Rápidas</h2>
-                <div class="actions-grid">
-                    <div class="action-card">
-                        <div class="action-icon">🗺️</div>
+                <div class="skills-grid">
+                    <div class="skill-card">
+                        <div class="skill-icon">🗺️</div>
                         <h3>Novo Mapeamento</h3>
                         <p>Desenhe uma nova propriedade no mapa interativo</p>
                         <a href="mapeamento.html" class="btn btn-primary">Começar</a>
                     </div>
-                    <div class="action-card">
-                        <div class="action-icon">📊</div>
+                    <div class="skill-card">
+                        <div class="skill-icon">📊</div>
                         <h3>Relatórios</h3>
                         <p>Visualize dados e métricas das suas propriedades</p>
                         <button class="btn btn-outline" disabled>Em Breve</button>
                     </div>
-                    <div class="action-card">
-                        <div class="action-icon">⚙️</div>
+                    <div class="skill-card">
+                        <div class="skill-icon">⚙️</div>
                         <h3>Configurações</h3>
                         <p>Gerencie sua conta e preferências do sistema</p>
                         <button class="btn btn-outline" disabled>Em Breve</button>
@@ -109,37 +106,52 @@
 
             <!-- Recent Properties -->
             <section class="recent-section">
-                <div class="section-header">
-                    <h2>Propriedades Recentes</h2>
-                    <a href="mapeamento.html" class="btn btn-outline btn-small">Ver Todas</a>
-                </div>
-                <div class="recent-properties" id="recentProperties">
-                    <div class="loading-state">
-                        <div class="loading-spinner"></div>
-                        <p>Carregando propriedades...</p>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="section-header">
+                            <div>
+                                <h2>Propriedades Recentes</h2>
+                                <p class="section-subtitle">Últimas propriedades cadastradas</p>
+                            </div>
+                            <a href="mapeamento.html" class="btn btn-outline btn-small">Ver Todas</a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="recent-properties" id="recentProperties">
+                            <div class="loading-state">
+                                <div class="loading-spinner"></div>
+                                <p>Carregando propriedades...</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
             <!-- System Info -->
             <section class="system-info">
-                <h2>Informações do Sistema</h2>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">Versão:</span>
-                        <span class="info-value">1.0.0</span>
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Informações do Sistema</h2>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">Último Acesso:</span>
-                        <span class="info-value" id="lastAccess">Carregando...</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Status:</span>
-                        <span class="info-value status-online">🟢 Online</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Tecnologia:</span>
-                        <span class="info-value">AWS + JavaScript</span>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Versão:</span>
+                                <span class="info-value">1.0.0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Último Acesso:</span>
+                                <span class="info-value" id="lastAccess">Carregando...</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Status:</span>
+                                <span class="info-value status-online">🟢 Online</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Tecnologia:</span>
+                                <span class="info-value">AWS + JavaScript</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -151,7 +163,7 @@
     <script src="js/components.js"></script>
     <script src="js/main.js"></script>
     <script>
-        // Dashboard-specific functionality
+        // Dashboard Controller
         class Dashboard {
             constructor() {
                 this.properties = [];
@@ -159,15 +171,12 @@
             }
 
             init() {
-                // Check auth first
                 if (!auth.isAuthenticated() || !auth.isTokenValid()) {
                     window.location.href = '/';
                     return;
                 }
                 
-                // Update user avatar with retry
                 this.updateUserAvatar();
-                
                 this.loadDashboardData();
                 this.updateLastAccess();
             }
@@ -179,7 +188,6 @@
                         window.userMenu.updateUser(userInfo);
                     }
                 } else {
-                    // Retry after components load
                     setTimeout(() => this.updateUserAvatar(), 200);
                 }
             }
@@ -190,7 +198,6 @@
                     this.updateStats();
                     this.renderRecentProperties();
                 } catch (error) {
-                    console.error('Dashboard error:', error);
                     this.showDemoData();
                 }
             }
@@ -211,7 +218,6 @@
                         this.properties = [];
                     }
                 } catch (error) {
-                    console.log('API not available, using demo data');
                     this.showDemoData();
                 }
             }
@@ -306,20 +312,155 @@
             }
         }
 
-        // Initialize dashboard when ready
+        // Initialize dashboard
         document.addEventListener('DOMContentLoaded', () => {
             new Dashboard();
             
-            // Direct logout handler for protected pages
+            // Direct logout handler
             document.addEventListener('click', (e) => {
                 if (e.target.closest('#logoutBtn') || e.target.closest('.logout-btn')) {
                     e.preventDefault();
-                    console.log('Dashboard logout clicked');
                     auth.signOut();
-                    window.location.href = '/';
                 }
             });
         });
     </script>
+
+    <style>
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: var(--space-3xl);
+        }
+
+        .dashboard-header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-md);
+        }
+
+        .actions-section {
+            margin-bottom: var(--space-3xl);
+        }
+
+        .actions-section h2 {
+            margin-bottom: var(--space-xl);
+            color: var(--gray-900);
+        }
+
+        .recent-section {
+            margin-bottom: var(--space-3xl);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--space-md);
+        }
+
+        .section-header h2 {
+            margin: 0;
+        }
+
+        .section-subtitle {
+            color: var(--gray-500);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .property-summary {
+            padding: var(--space-lg);
+            border-bottom: 1px solid var(--gray-200);
+            transition: var(--transition);
+        }
+
+        .property-summary:last-child {
+            border-bottom: none;
+        }
+
+        .property-summary:hover {
+            background: var(--gray-50);
+        }
+
+        .property-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-md);
+            flex-wrap: wrap;
+            gap: var(--space-sm);
+        }
+
+        .property-header h4 {
+            color: var(--gray-900);
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .property-metrics {
+            display: flex;
+            gap: var(--space-lg);
+            margin-bottom: var(--space-sm);
+            flex-wrap: wrap;
+        }
+
+        .property-metrics span {
+            color: var(--gray-600);
+            font-size: 0.9rem;
+        }
+
+        .property-date {
+            color: var(--gray-500);
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-md);
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-md);
+            background: var(--gray-50);
+            border-radius: var(--border-radius);
+            border-left: 3px solid var(--primary);
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: var(--gray-600);
+        }
+
+        .info-value {
+            color: var(--gray-900);
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-md);
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--space-xs);
+            }
+        }
+    </style>
 </body>
 </html>

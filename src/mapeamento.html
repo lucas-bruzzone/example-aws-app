@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapeamento - Lucas Bruzzone</title>
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/pages.css">
+    <title>Mapeamento - Sistema Rural</title>
+    <link rel="stylesheet" href="css/styles.css">
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -14,20 +12,19 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 </head>
 <body>
-    <!-- Header Global -->
+    <!-- Header -->
     <header class="header">
         <div class="header-container">
             <div class="logo">
-                <a href="/">Aplicação Demo</a>
+                <a href="/">Sistema Rural</a>
             </div>
             <nav class="nav">
                 <a href="/" class="nav-link">Home</a>
-                <a href="projeto.html" class="nav-link">Projeto</a>
             </nav>
             <div class="auth-section">
                 <div class="user-menu" id="userMenu">
                     <button class="user-avatar" id="userAvatar">
-                        <span id="userInitial">L</span>
+                        <span id="userInitial">U</span>
                     </button>
                     <div class="dropdown" id="userDropdown">
                         <a href="dashboard.html" class="dropdown-item">
@@ -56,29 +53,27 @@
             </section>
 
             <!-- Instructions -->
-            <section class="instructions-card">
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Como usar o mapeamento:</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="instructions-grid">
-                            <div class="instruction-item">
-                                <span class="instruction-icon">⬟</span>
-                                <span>Clique no ícone de polígono na barra de ferramentas</span>
-                            </div>
-                            <div class="instruction-item">
-                                <span class="instruction-icon">🖱️</span>
-                                <span>Clique em pontos no mapa para desenhar a área</span>
-                            </div>
-                            <div class="instruction-item">
-                                <span class="instruction-icon">🔄</span>
-                                <span>Clique no primeiro ponto para fechar o polígono</span>
-                            </div>
-                            <div class="instruction-item">
-                                <span class="instruction-icon">💾</span>
-                                <span>Preencha os dados e salve a propriedade</span>
-                            </div>
+            <section class="card">
+                <div class="card-header">
+                    <h3>Como usar o mapeamento:</h3>
+                </div>
+                <div class="card-body">
+                    <div class="skills-grid">
+                        <div class="instruction-item">
+                            <span class="instruction-icon">⬟</span>
+                            <span>Clique no ícone de polígono na barra de ferramentas</span>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-icon">🖱️</span>
+                            <span>Clique em pontos no mapa para desenhar a área</span>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-icon">🔄</span>
+                            <span>Clique no primeiro ponto para fechar o polígono</span>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-icon">💾</span>
+                            <span>Preencha os dados e salve a propriedade</span>
                         </div>
                     </div>
                 </div>
@@ -108,7 +103,7 @@
             <section class="property-form-section hidden" id="propertyForm">
                 <div class="card">
                     <div class="card-header">
-                        <h3 id="formTitle">Cadastrar Propriedade</h3>
+                        <h3>Cadastrar Propriedade</h3>
                     </div>
                     <div class="card-body">
                         <form class="property-form">
@@ -153,8 +148,7 @@
                     <div class="card-footer">
                         <div class="form-actions">
                             <button id="savePropertyBtn" class="btn btn-primary">
-                                <span class="btn-icon">💾</span>
-                                Salvar Propriedade
+                                💾 Salvar Propriedade
                             </button>
                             <button id="cancelFormBtn" class="btn btn-secondary">
                                 Cancelar
@@ -174,8 +168,7 @@
                                 <p class="section-subtitle">Gerencie todas as suas propriedades cadastradas</p>
                             </div>
                             <button id="refreshPropertiesBtn" class="btn btn-outline btn-small">
-                                <span class="btn-icon">🔄</span>
-                                Atualizar
+                                🔄 Atualizar
                             </button>
                         </div>
                     </div>
@@ -190,9 +183,6 @@
                 </div>
             </section>
         </div>
-
-        <!-- Status Toast Container -->
-        <div id="statusContainer" class="status-message hidden"></div>
     </main>
 
     <!-- Scripts -->
@@ -207,522 +197,259 @@
     <!-- Turf.js for geometric calculations -->
     <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
     
-    <!-- Enhanced Map Script -->
+    <!-- Map Script -->
+    <script src="js/map.js"></script>
+
     <script>
-        // Enhanced Map Controller for new structure
-        class EnhancedMapController {
-            constructor() {
-                this.properties = [];
-                this.map = null;
-                this.drawnItems = null;
-                this.drawControl = null;
-                this.currentPolygon = null;
-                this.editingPropertyId = null;
-                
-                this.PROPERTIES_API_URL = 'https://nfvbev7jgc.execute-api.us-east-1.amazonaws.com/devops/properties';
-            }
-
-            async init() {
-                // Check auth first
-                if (!auth.isAuthenticated() || !auth.isTokenValid()) {
-                    window.location.href = '/';
-                    return;
-                }
-
-                // Update user avatar with retry
-                this.updateUserAvatar();
-
-                // Wait for libraries to load
-                if (typeof L === 'undefined' || typeof turf === 'undefined') {
-                    setTimeout(() => this.init(), 500);
-                    return;
-                }
-
-                try {
-                    this.initializeMap();
-                    this.bindEvents();
-                    this.checkAPIConnection();
-                } catch (error) {
-                    console.error('Map initialization failed:', error);
-                    this.updateStatus('Erro ao inicializar mapa', 'error');
-                }
-            }
-
-            updateUserAvatar() {
-                if (window.userMenu) {
-                    const userInfo = auth.getUserInfo();
-                    if (userInfo) {
-                        window.userMenu.updateUser(userInfo);
-                    }
-                } else {
-                    // Retry after components load
-                    setTimeout(() => this.updateUserAvatar(), 200);
-                }
-            }
-
-            initializeMap() {
-                console.log('Initializing map...');
-                
-                // Check if map element exists
-                const mapElement = document.getElementById('map');
-                if (!mapElement) {
-                    throw new Error('Map element not found');
-                }
-
-                try {
-                    // São Sebastião do Paraíso coordinates
-                    this.map = L.map('map').setView([-21.206, -46.876], 13);
-                    console.log('Map created successfully');
-
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap contributors',
-                        maxZoom: 19
-                    }).addTo(this.map);
-                    console.log('Tiles added');
-
-                    this.drawnItems = new L.FeatureGroup();
-                    this.map.addLayer(this.drawnItems);
-
-                    this.setupDrawControls();
-                    this.setupMapEvents();
-                    
-                    this.updateStatus('Mapa carregado!', 'success');
-                    console.log('Map initialization complete');
-                } catch (error) {
-                    console.error('Map initialization error:', error);
-                    this.updateStatus('Erro ao carregar mapa', 'error');
-                    throw error;
-                }
-            }
-
-            setupDrawControls() {
-                this.drawControl = new L.Control.Draw({
-                    edit: {
-                        featureGroup: this.drawnItems,
-                        remove: true
-                    },
-                    draw: {
-                        polygon: {
-                            allowIntersection: false,
-                            shapeOptions: {
-                                color: '#667eea',
-                                weight: 3,
-                                fillOpacity: 0.2,
-                                fillColor: '#667eea'
-                            }
-                        },
-                        rectangle: {
-                            shapeOptions: {
-                                color: '#667eea',
-                                weight: 3,
-                                fillOpacity: 0.2,
-                                fillColor: '#667eea'
-                            }
-                        },
-                        polyline: false,
-                        circle: false,
-                        marker: false,
-                        circlemarker: false
-                    }
-                });
-                
-                this.map.addControl(this.drawControl);
-            }
-
-            setupMapEvents() {
-                this.map.on(L.Draw.Event.CREATED, (e) => this.onShapeCreated(e));
-                this.map.on(L.Draw.Event.EDITED, (e) => this.onShapeEdited(e));
-                this.map.on(L.Draw.Event.DELETED, (e) => this.onShapeDeleted(e));
-            }
-
-            onShapeCreated(e) {
-                const layer = e.layer;
-                this.currentPolygon = layer;
-                this.drawnItems.addLayer(layer);
-                
-                const metrics = this.calculateMetrics(layer);
-                this.showPropertyForm(metrics);
-                this.updateStatus('Área demarcada! Preencha os dados da propriedade.', 'info');
-            }
-
-            onShapeEdited(e) {
-                e.layers.eachLayer((layer) => {
-                    const metrics = this.calculateMetrics(layer);
-                    if (layer === this.currentPolygon) {
-                        this.updateFormMetrics(metrics);
-                    }
-                });
-                this.updateStatus('Área editada com sucesso!', 'success');
-            }
-
-            onShapeDeleted(e) {
-                this.hidePropertyForm();
-                this.currentPolygon = null;
-                this.updateStatus('Área removida.', 'info');
-            }
-
-            calculateMetrics(layer) {
-                try {
-                    let coords;
-                    
-                    if (layer instanceof L.Polygon || layer instanceof L.Rectangle) {
-                        coords = layer.getLatLngs()[0].map(latlng => [latlng.lng, latlng.lat]);
-                    } else {
-                        throw new Error('Unsupported geometry type');
-                    }
-                    
-                    if (coords[0][0] !== coords[coords.length - 1][0] || 
-                        coords[0][1] !== coords[coords.length - 1][1]) {
-                        coords.push(coords[0]);
-                    }
-                    
-                    const polygon = turf.polygon([coords]);
-                    const areaM2 = turf.area(polygon);
-                    const areaHectares = (areaM2 / 10000).toFixed(2);
-                    const perimeterKm = turf.length(polygon, {units: 'kilometers'});
-                    const perimeterMeters = Math.round(perimeterKm * 1000);
-                    
-                    return {
-                        area: areaHectares,
-                        perimeter: perimeterMeters,
-                        coordinates: coords
-                    };
-                } catch (error) {
-                    console.error('Metrics calculation error:', error);
-                    return { area: '0.00', perimeter: '0', coordinates: [] };
-                }
-            }
-
-            bindEvents() {
-                document.getElementById('savePropertyBtn').addEventListener('click', () => this.handleSave());
-                document.getElementById('cancelFormBtn').addEventListener('click', () => this.hidePropertyForm());
-                document.getElementById('refreshPropertiesBtn').addEventListener('click', () => this.loadProperties());
-            }
-
-            showPropertyForm(metrics) {
-                this.updateFormMetrics(metrics);
-                document.getElementById('propertyForm').classList.remove('hidden');
-                document.getElementById('propertyName').focus();
-            }
-
-            hidePropertyForm() {
-                document.getElementById('propertyForm').classList.add('hidden');
-                this.clearForm();
-                this.editingPropertyId = null;
-                this.currentPolygon = null;
-            }
-
-            updateFormMetrics(metrics) {
-                document.getElementById('calculatedArea').textContent = `${metrics.area} hectares`;
-                document.getElementById('calculatedPerimeter').textContent = `${metrics.perimeter} metros`;
-            }
-
-            clearForm() {
-                document.getElementById('propertyName').value = '';
-                document.getElementById('propertyType').value = 'fazenda';
-                document.getElementById('propertyDescription').value = '';
-                document.getElementById('calculatedArea').textContent = '-';
-                document.getElementById('calculatedPerimeter').textContent = '-';
-            }
-
-            async handleSave() {
-                const name = document.getElementById('propertyName').value.trim();
-                const type = document.getElementById('propertyType').value;
-                const description = document.getElementById('propertyDescription').value.trim();
-                
-                if (!name) {
-                    this.updateStatus('Digite o nome da propriedade', 'error');
-                    return;
-                }
-                
-                if (!this.currentPolygon) {
-                    this.updateStatus('Desenhe uma área no mapa primeiro', 'error');
-                    return;
-                }
-                
-                const metrics = this.calculateMetrics(this.currentPolygon);
-                const saveBtn = document.getElementById('savePropertyBtn');
-                
-                saveBtn.disabled = true;
-                saveBtn.innerHTML = '<span class="loading-spinner"></span> Salvando...';
-                
-                try {
-                    await this.saveProperty({
-                        name, type, description,
-                        area: parseFloat(metrics.area),
-                        perimeter: metrics.perimeter,
-                        coordinates: metrics.coordinates
-                    });
-                    
-                    this.updateStatus(`Propriedade "${name}" salva com sucesso!`, 'success');
-                    this.hidePropertyForm();
-                    this.loadProperties();
-                } catch (error) {
-                    this.updateStatus(`Erro ao salvar: ${error.message}`, 'error');
-                } finally {
-                    saveBtn.disabled = false;
-                    saveBtn.innerHTML = '<span class="btn-icon">💾</span> Salvar Propriedade';
-                }
-            }
-
-            async saveProperty(propertyData) {
-                const token = auth.getToken();
-                if (!token) throw new Error('Token não encontrado');
-                
-                const response = await fetch(this.PROPERTIES_API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(propertyData)
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `HTTP ${response.status}`);
-                }
-                
-                return response.json();
-            }
-
-            async loadProperties() {
-                const refreshBtn = document.getElementById('refreshPropertiesBtn');
-                refreshBtn.disabled = true;
-                refreshBtn.innerHTML = '<span class="loading-spinner"></span> Carregando...';
-                
-                try {
-                    const token = auth.getToken();
-                    const response = await fetch(this.PROPERTIES_API_URL, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        this.properties = data.properties || [];
-                    } else {
-                        this.properties = [];
-                    }
-                    
-                    this.renderProperties();
-                    this.updateMapProperties();
-                    this.updateStatus(`${this.properties.length} propriedades carregadas`, 'success');
-                } catch (error) {
-                    console.error('Load properties error:', error);
-                    this.updateStatus('Erro ao carregar propriedades', 'error');
-                } finally {
-                    refreshBtn.disabled = false;
-                    refreshBtn.innerHTML = '<span class="btn-icon">🔄</span> Atualizar';
-                }
-            }
-
-            renderProperties() {
-                const container = document.getElementById('propertiesList');
-                
-                if (this.properties.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-icon">🗺️</div>
-                            <h3>Nenhuma propriedade cadastrada</h3>
-                            <p>Desenhe sua primeira área no mapa para começar</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                container.innerHTML = this.properties.map(prop => `
-                    <div class="property-card">
-                        <div class="property-header">
-                            <h4>${prop.name}</h4>
-                            <span class="property-type">${this.capitalize(prop.type)}</span>
-                        </div>
-                        <div class="property-metrics">
-                            <div class="metric-item">
-                                <span class="metric-icon">📐</span>
-                                <span>${prop.area} ha</span>
-                            </div>
-                            <div class="metric-item">
-                                <span class="metric-icon">📏</span>
-                                <span>${(prop.perimeter / 1000).toFixed(1)} km</span>
-                            </div>
-                        </div>
-                        ${prop.description ? `<p class="property-desc">${prop.description}</p>` : ''}
-                        <div class="property-actions">
-                            <button class="btn btn-outline btn-small" onclick="mapController.zoomToProperty('${prop.id}')">
-                                Ver no Mapa
-                            </button>
-                            <button class="btn btn-outline btn-small" onclick="mapController.deleteProperty('${prop.id}')">
-                                Excluir
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            updateMapProperties() {
-                this.drawnItems.clearLayers();
-                
-                this.properties.forEach(property => {
-                    if (property.coordinates && property.coordinates.length > 0) {
-                        const latLngs = property.coordinates.slice(0, -1).map(coord => [coord[1], coord[0]]);
-                        
-                        const polygon = L.polygon(latLngs, {
-                            color: '#28a745',
-                            fillColor: '#28a745',
-                            weight: 3,
-                            fillOpacity: 0.2
-                        });
-                        
-                        polygon.bindPopup(`
-                            <div class="popup-content">
-                                <strong>${property.name}</strong><br>
-                                Tipo: ${this.capitalize(property.type)}<br>
-                                Área: ${property.area} hectares<br>
-                                Perímetro: ${property.perimeter} metros
-                            </div>
-                        `);
-                        
-                        polygon.propertyData = property;
-                        this.drawnItems.addLayer(polygon);
-                    }
-                });
-            }
-
-            zoomToProperty(propertyId) {
-                const property = this.properties.find(p => p.id === propertyId);
-                if (!property) return;
-                
-                let targetLayer = null;
-                this.drawnItems.eachLayer(layer => {
-                    if (layer.propertyData && layer.propertyData.id === propertyId) {
-                        targetLayer = layer;
-                    }
-                });
-                
-                if (targetLayer) {
-                    this.map.fitBounds(targetLayer.getBounds());
-                    targetLayer.openPopup();
-                    this.updateStatus(`Focando na propriedade "${property.name}"`, 'info');
-                }
-            }
-
-            async deleteProperty(propertyId) {
-                if (!confirm('Tem certeza que deseja excluir esta propriedade?')) return;
-                
-                try {
-                    const token = auth.getToken();
-                    const response = await fetch(`${this.PROPERTIES_API_URL}/${propertyId}`, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    
-                    if (response.ok) {
-                        this.updateStatus('Propriedade excluída com sucesso', 'success');
-                        this.loadProperties();
-                    } else {
-                        throw new Error('Erro ao excluir');
-                    }
-                } catch (error) {
-                    this.updateStatus(`Erro ao excluir: ${error.message}`, 'error');
-                }
-            }
-
-            async checkAPIConnection() {
-                try {
-                    await this.loadProperties();
-                } catch (error) {
-                    console.log('API connection check failed, using offline mode');
-                }
-            }
-
-            updateStatus(message, type = 'info') {
-                const statusEl = document.getElementById('mapStatus');
-                const colors = {
-                    success: '🟢',
-                    error: '🔴',
-                    warning: '🟡',
-                    info: '🔵'
-                };
-                
-                statusEl.textContent = `${colors[type]} ${message}`;
-                statusEl.className = `status-badge ${type === 'success' ? 'online' : ''}`;
-                
-                if (window.toast) {
-                    window.toast.show(message, type);
-                }
-            }
-
-            capitalize(str) {
-                return str.charAt(0).toUpperCase() + str.slice(1);
-            }
-        }
-
-        // Global instance
-        window.mapController = null;
-
-        // Simple initialization function
-        function initializeMapSystem() {
-            console.log('Starting map system initialization...');
-            
-            // Check if all required libraries are loaded
-            if (typeof L === 'undefined') {
-                console.log('Leaflet not loaded yet, retrying...');
-                setTimeout(initializeMapSystem, 500);
-                return;
-            }
-            
-            if (typeof turf === 'undefined') {
-                console.log('Turf not loaded yet, retrying...');
-                setTimeout(initializeMapSystem, 500);
-                return;
-            }
-            
-            if (typeof auth === 'undefined') {
-                console.log('Auth not loaded yet, retrying...');
-                setTimeout(initializeMapSystem, 500);
-                return;
-            }
-            
-            // Check authentication
-            if (!auth.isAuthenticated() || !auth.isTokenValid()) {
-                console.log('User not authenticated, redirecting...');
-                window.location.href = '/';
-                return;
-            }
-            
-            console.log('All dependencies loaded, creating map controller...');
-            window.mapController = new EnhancedMapController();
-            window.mapController.init();
-        }
-
-        // Start initialization when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                initializeMapSystem();
-                
-                // Direct logout handler for protected pages
-                document.addEventListener('click', (e) => {
-                    if (e.target.closest('#logoutBtn') || e.target.closest('.logout-btn')) {
-                        e.preventDefault();
-                        console.log('Mapeamento logout clicked');
-                        auth.signOut();
-                        window.location.href = '/';
-                    }
-                });
-            });
-        } else {
-            initializeMapSystem();
-            
-            // Direct logout handler
+        // Direct logout handler for mapeamento
+        document.addEventListener('DOMContentLoaded', () => {
             document.addEventListener('click', (e) => {
                 if (e.target.closest('#logoutBtn') || e.target.closest('.logout-btn')) {
                     e.preventDefault();
-                    console.log('Mapeamento logout clicked');
                     auth.signOut();
-                    window.location.href = '/';
                 }
             });
-        }
+        });
     </script>
+
+    <style>
+        .page-header {
+            text-align: center;
+            margin-bottom: var(--space-xl);
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-md);
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            color: var(--gray-600);
+        }
+
+        .instruction-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-sm);
+        }
+
+        .instruction-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .map-section {
+            margin-bottom: var(--space-xl);
+        }
+
+        .map-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--space-md);
+        }
+
+        .map-controls-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .map-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            min-height: 400px;
+        }
+
+        .map-canvas {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+        }
+
+        .property-form-section {
+            margin-bottom: var(--space-xl);
+        }
+
+        .property-form {
+            width: 100%;
+        }
+
+        .property-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-lg);
+            padding: var(--space-lg);
+            background: var(--gray-50);
+            border-radius: var(--border-radius);
+            margin-bottom: var(--space-lg);
+        }
+
+        .metric-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .metric-icon {
+            font-size: 1.5rem;
+            opacity: 0.8;
+        }
+
+        .metric-content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xs);
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 1.1rem;
+            color: var(--gray-900);
+            font-weight: 600;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: var(--space-md);
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .properties-section .section-subtitle {
+            color: var(--gray-500);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .properties-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--space-lg);
+        }
+
+        .property-card {
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius-lg);
+            padding: var(--space-lg);
+            transition: var(--transition-slow);
+        }
+
+        .property-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+        }
+
+        .property-card h4 {
+            color: var(--gray-900);
+            margin-bottom: var(--space-sm);
+            font-size: 1.1rem;
+        }
+
+        .property-type {
+            background: var(--primary);
+            color: white;
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--border-radius);
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: capitalize;
+            margin-bottom: var(--space-md);
+            display: inline-block;
+        }
+
+        .property-actions {
+            display: flex;
+            gap: var(--space-sm);
+            flex-wrap: wrap;
+            margin-top: var(--space-md);
+        }
+
+        .property-date {
+            color: var(--gray-500);
+            font-size: 0.8rem;
+            margin-top: var(--space-sm);
+        }
+
+        /* Leaflet Customizations */
+        .leaflet-draw-toolbar {
+            background: white !important;
+            border-radius: var(--border-radius) !important;
+            box-shadow: var(--shadow-md) !important;
+            border: 1px solid var(--gray-200) !important;
+        }
+
+        .leaflet-draw-toolbar a {
+            border-radius: var(--border-radius) !important;
+            transition: var(--transition) !important;
+        }
+
+        .leaflet-draw-toolbar a:hover {
+            background: var(--primary) !important;
+            color: white !important;
+        }
+
+        .leaflet-popup-content-wrapper {
+            border-radius: var(--border-radius) !important;
+            box-shadow: var(--shadow-lg) !important;
+        }
+
+        .popup-content {
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .popup-content strong {
+            color: var(--gray-900);
+            font-size: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .map-header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .properties-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+            
+            .map-container {
+                height: 350px;
+            }
+            
+            .instruction-item {
+                flex-direction: column;
+                text-align: center;
+                gap: var(--space-sm);
+            }
+        }
+    </style>
 </body>
 </html>
