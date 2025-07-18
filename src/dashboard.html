@@ -370,6 +370,7 @@
                             <div class="property-header">
                                 <h4>${prop.name}</h4>
                                 <span class="property-type">${this.capitalizeFirst(prop.type)}</span>
+                                ${this.getAnalysisStatusBadge(prop.analysisStatus)}
                             </div>
                             <div class="property-metrics">
                                 <span>📐 ${prop.area} ha</span>
@@ -378,6 +379,13 @@
                             <div class="property-date">
                                 Criado em ${new Date(prop.createdAt).toLocaleDateString('pt-BR')}
                             </div>
+                            ${prop.analysisStatus === 'completed' ? `
+                                <div class="analysis-preview">
+                                    <button class="btn btn-small btn-outline" onclick="window.dashboard.viewAnalysis('${prop.id}')">
+                                        📊 Ver Análise
+                                    </button>
+                                </div>
+                            ` : ''}
                         </div>
                         <div class="property-actions">
                             <button class="btn btn-small btn-outline" onclick="window.open('mapeamento.html', '_blank')">
@@ -393,6 +401,170 @@
                         this.togglePropertySelection(e.target.dataset.propertyId, e.target.checked);
                     });
                 });
+
+                // Start polling for pending analyses
+                this.startAnalysisPolling();
+            }
+
+            getAnalysisStatusBadge(status) {
+                const badges = {
+                    'pending': '<span class="analysis-badge pending">⏳ Análise pendente</span>',
+                    'processing': '<span class="analysis-badge processing">🔄 Processando</span>',
+                    'completed': '<span class="analysis-badge completed">✅ Análise concluída</span>',
+                    'error': '<span class="analysis-badge error">❌ Erro na análise</span>'
+                };
+                return badges[status] || '';
+            }
+
+            startAnalysisPolling() {
+                // Clear existing polling
+                if (this.pollingInterval) {
+                    clearInterval(this.pollingInterval);
+                }
+
+                // Check if any properties are pending/processing
+                const pendingProperties = this.properties.filter(p => 
+                    p.analysisStatus === 'pending' || p.analysisStatus === 'processing'
+                );
+
+                if (pendingProperties.length > 0) {
+                    this.pollingInterval = setInterval(() => {
+                        this.checkAnalysisStatus();
+                    }, 10000); // Poll every 10 seconds
+                }
+            }
+
+            async checkAnalysisStatus() {
+                const pendingProperties = this.properties.filter(p => 
+                    p.analysisStatus === 'pending' || p.analysisStatus === 'processing'
+                );
+
+                if (pendingProperties.length === 0) {
+                    clearInterval(this.pollingInterval);
+                    return;
+                }
+
+                for (const property of pendingProperties) {
+                    try {
+                        const response = await fetch(`https://nfvbev7jgc.execute-api.us-east-1.amazonaws.com/devops/properties/${property.id}/analysis`, {
+                            headers: { 'Authorization': `Bearer ${auth.getToken()}` }
+                        });
+
+                        if (response.ok) {
+                            const analysisData = await response.json();
+                            
+                            // Update property status
+                            const propertyIndex = this.properties.findIndex(p => p.id === property.id);
+                            if (propertyIndex !== -1 && analysisData.analysis.analysisStatus) {
+                                this.properties[propertyIndex].analysisStatus = analysisData.analysis.analysisStatus;
+                                
+                                // Re-render if status changed
+                                if (analysisData.analysis.analysisStatus === 'completed') {
+                                    this.renderPropertiesList();
+                                    if (window.toast) {
+                                        window.toast.show(`Análise concluída para ${property.name}`, 'success');
+                                    }
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.warn(`Erro ao verificar análise da propriedade ${property.id}:`, error);
+                    }
+                }
+            }
+
+            async viewAnalysis(propertyId) {
+                try {
+                    const response = await fetch(`https://nfvbev7jgc.execute-api.us-east-1.amazonaws.com/devops/properties/${propertyId}/analysis`, {
+                        headers: { 'Authorization': `Bearer ${auth.getToken()}` }
+                    });
+
+                    if (response.ok) {
+                        const analysisData = await response.json();
+                        this.showAnalysisModal(analysisData);
+                    } else {
+                        if (window.toast) {
+                            window.toast.show('Erro ao carregar análise', 'error');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro ao buscar análise:', error);
+                    if (window.toast) {
+                        window.toast.show('Erro ao buscar análise', 'error');
+                    }
+                }
+            }
+
+            showAnalysisModal(analysisData) {
+                const property = this.properties.find(p => p.id === analysisData.propertyId);
+                if (!property) return;
+
+                const analysis = analysisData.analysis;
+                
+                // Create modal content
+                const modalContent = `
+                    <div class="analysis-modal-content">
+                        <h3>Análise Geoespacial - ${property.name}</h3>
+                        
+                        ${analysis.analysisResults ? `
+                            <div class="analysis-results">
+                                ${analysis.analysisResults.elevation ? `
+                                    <div class="analysis-section">
+                                        <h4>🏔️ Elevação</h4>
+                                        <div class="analysis-metrics">
+                                            <span>Média: ${analysis.analysisResults.elevation.avg_elevation}m</span>
+                                            <span>Máxima: ${analysis.analysisResults.elevation.max_elevation}m</span>
+                                            <span>Mínima: ${analysis.analysisResults.elevation.min_elevation}m</span>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                ${analysis.analysisResults.ndvi ? `
+                                    <div class="analysis-section">
+                                        <h4>🌱 Vegetação (NDVI)</h4>
+                                        <div class="analysis-metrics">
+                                            <span>NDVI médio: ${analysis.analysisResults.ndvi.avg_ndvi}</span>
+                                            <span>Cobertura: ${analysis.analysisResults.ndvi.vegetation_coverage}%</span>
+                                            <span>Classificação: ${analysis.analysisResults.ndvi.classification}</span>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                ${analysis.analysisResults.slope ? `
+                                    <div class="analysis-section">
+                                        <h4>📐 Declividade</h4>
+                                        <div class="analysis-metrics">
+                                            <span>Inclinação média: ${analysis.analysisResults.slope.avg_slope}°</span>
+                                            <span>Máxima: ${analysis.analysisResults.slope.max_slope}°</span>
+                                            <span>Classificação: ${analysis.analysisResults.slope.slope_classification}</span>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                ${analysis.analysisResults.weather ? `
+                                    <div class="analysis-section">
+                                        <h4>🌤️ Clima</h4>
+                                        <div class="analysis-metrics">
+                                            <span>Chuva anual: ${analysis.analysisResults.weather.annual_rainfall}mm</span>
+                                            <span>Temperatura: ${analysis.analysisResults.weather.avg_temperature}°C</span>
+                                            <span>Zona climática: ${analysis.analysisResults.weather.climate_zone}</span>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                <div class="analysis-footer">
+                                    <small>Análise concluída em: ${new Date(analysis.completedAt).toLocaleDateString('pt-BR')}</small>
+                                </div>
+                            </div>
+                        ` : '<p>Dados de análise não disponíveis</p>'}
+                    </div>
+                `;
+
+                // Show modal (reuse existing modal)
+                const modal = document.getElementById('loginModal');
+                modal.querySelector('#modalTitle').textContent = 'Análise Geoespacial';
+                modal.querySelector('.modal-body').innerHTML = modalContent;
+                modal.classList.remove('hidden');
             }
 
             togglePropertySelection(propertyId, selected) {
@@ -864,7 +1036,7 @@
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', () => {
-            new Dashboard();
+            window.dashboard = new Dashboard();
             
             // Direct logout handler
             document.addEventListener('click', (e) => {
@@ -1048,6 +1220,89 @@
             .csv-preview-table th,
             .csv-preview-table td {
                 padding: var(--space-xs);
+            }
+        }
+
+        /* Analysis Status Badges */
+        .analysis-badge {
+            display: inline-block;
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--border-radius);
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: var(--space-sm);
+        }
+
+        .analysis-badge.pending {
+            background: rgba(251, 191, 36, 0.1);
+            color: #d97706;
+            border: 1px solid rgba(251, 191, 36, 0.2);
+        }
+
+        .analysis-badge.processing {
+            background: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .analysis-badge.completed {
+            background: rgba(34, 197, 94, 0.1);
+            color: #059669;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .analysis-badge.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        /* Analysis Modal */
+        .analysis-modal-content h3 {
+            color: var(--primary);
+            margin-bottom: var(--space-lg);
+        }
+
+        .analysis-section {
+            margin-bottom: var(--space-lg);
+            padding: var(--space-md);
+            background: var(--gray-50);
+            border-radius: var(--border-radius);
+            border-left: 3px solid var(--primary);
+        }
+
+        .analysis-section h4 {
+            margin-bottom: var(--space-md);
+            color: var(--gray-800);
+            font-size: 1rem;
+        }
+
+        .analysis-metrics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-md);
+        }
+
+        .analysis-metrics span {
+            background: white;
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        .analysis-footer {
+            margin-top: var(--space-lg);
+            padding-top: var(--space-md);
+            border-top: 1px solid var(--gray-200);
+            text-align: center;
+            color: var(--gray-500);
+        }
+
+        @media (max-width: 768px) {
+            .analysis-metrics {
+                flex-direction: column;
+                gap: var(--space-sm);
             }
         }
     </style>
