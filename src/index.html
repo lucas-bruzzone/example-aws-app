@@ -4,26 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lucas Bruzzone - Cientista de Dados</title>
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/pages.css">
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <!-- Header Global -->
+    <!-- Header -->
     <header class="header">
         <div class="header-container">
             <div class="logo">
-                <a href="/">Aplicação Demo</a>
+                <a href="/">Lucas Bruzzone</a>
             </div>
-            <nav class="nav">
-                <a href="/" class="nav-link active">Home</a>
-                <a href="projeto.html" class="nav-link">Projeto</a>
-            </nav>
             <div class="auth-section">
-                <!-- Estado deslogado -->
-                <button class="login-btn" id="loginBtn">Login</button>
+                <button class="login-btn" id="loginBtn">Acessar Sistema</button>
                 
-                <!-- Estado logado (hidden by default) -->
                 <div class="user-menu hidden" id="userMenu">
                     <button class="user-avatar" id="userAvatar">
                         <span id="userInitial">L</span>
@@ -58,33 +50,20 @@
                         Cientista de Dados | 2x AWS Certified | Mestre em Machine Learning | Professor Universitário
                     </p>
                     <div class="hero-actions">
-                        <a href="projeto.html" class="btn btn-primary">Ver Projeto</a>
-                        <button class="btn btn-secondary" id="heroLoginBtn">Testar Sistema</button>
+                        <button class="btn btn-primary btn-large" id="heroLoginBtn">Testar Sistema Demo</button>
+                        <a href="#projeto" class="btn btn-outline btn-large">Ver Projeto</a>
                     </div>
                 </div>
                 <div class="hero-visual">
-                    <div class="hero-card">
+                    <div class="card hero-card">
                         <div class="card-header">
-                            <div class="card-dots">
-                                <span class="dot red"></span>
-                                <span class="dot yellow"></span>
-                                <span class="dot green"></span>
-                            </div>
+                            <h3>💻 Desenvolvedor</h3>
                         </div>
-                        <div class="card-content">
-                            <div class="code-line">
-                                <span class="keyword">const</span> <span class="variable">perfil</span> = {
-                            </div>
-                            <div class="code-line indent">
-                                <span class="property">area</span>: <span class="string">'Ciência de Dados'</span>,
-                            </div>
-                            <div class="code-line indent">
-                                <span class="property">cloud</span>: [<span class="string">'AWS'</span>, <span class="string">'Terraform'</span>],
-                            </div>
-                            <div class="code-line indent">
-                                <span class="property">ensino</span>: <span class="string">'🎓 Professor'</span>
-                            </div>
-                            <div class="code-line">}</div>
+                        <div class="card-body">
+                            <p>🚀 Cloud & Data Engineering</p>
+                            <p>📊 Machine Learning & NLP</p>
+                            <p>🎓 Professor Universitário</p>
+                            <p>☁️ AWS Certified</p>
                         </div>
                     </div>
                 </div>
@@ -95,66 +74,69 @@
         <section class="showcase">
             <div class="container">
                 <h2 class="section-title">🚀 Sobre Mim</h2>
-                <div class="about-grid">
-                    <div class="about-content">
-                        <div class="about-item">
-                            <span class="about-icon">📊</span>
-                            <p>Data Analyst na E-ctare, focado em arquitetura cloud e pipelines de dados</p>
-                        </div>
-                        <div class="about-item">
-                            <span class="about-icon">🎓</span>
-                            <p>Professor de Engenharia de Software e Microsserviços na Libertas Faculdades Integradas</p>
-                        </div>
-                        <div class="about-item">
-                            <span class="about-icon">🎯</span>
-                            <p>Mestre em Ciências da Computação (UFSCar) com especialização em ML e NLP</p>
-                        </div>
-                        <div class="about-item">
-                            <span class="about-icon">⚡</span>
-                            <p>Implemento soluções AWS para democratização de dados e cultura data-driven</p>
-                        </div>
+                <div class="skills-grid">
+                    <div class="skill-card">
+                        <div class="skill-icon">📊</div>
+                        <h3>Profissional</h3>
+                        <p>Data Analyst na E-ctare, focado em arquitetura cloud e pipelines de dados</p>
                     </div>
-                    
-                    <div class="certifications">
-                        <h3>🎓 Certificações</h3>
-                        <div class="cert-list">
-                            <div class="cert-item">🏆 AWS Certified AI Practitioner</div>
-                            <div class="cert-item">☁️ AWS Certified Cloud Practitioner</div>
-                            <div class="cert-item">📚 AWS Academy Educator</div>
-                            <div class="cert-item">🎯 Bootcamp Engenharia de Dados</div>
-                        </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">🎓</div>
+                        <h3>Acadêmico</h3>
+                        <p>Professor de Engenharia de Software e Microsserviços na Libertas Faculdades</p>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">🎯</div>
+                        <h3>Formação</h3>
+                        <p>Mestre em Ciências da Computação (UFSCar) com especialização em ML e NLP</p>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">☁️</div>
+                        <h3>Certificações</h3>
+                        <p>AWS Certified AI Practitioner • AWS Cloud Practitioner • AWS Academy Educator</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Single Project Showcase -->
-        <section class="showcase">
+        <!-- Project Demo Section -->
+        <section class="showcase" id="projeto">
             <div class="container">
-                <h2 class="section-title">Projeto Desenvolvido</h2>
+                <h2 class="section-title">Sistema Desenvolvido</h2>
                 <div class="project-card">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <span class="placeholder-icon">🗺️</span>
-                            <span class="placeholder-text">Sistema de Mapeamento Rural</span>
+                    <div class="project-content">
+                        <h3 class="project-title">Sistema de Mapeamento Rural</h3>
+                        <p class="project-description">
+                            Aplicação web completa para gestão de propriedades rurais com mapeamento interativo, 
+                            cálculos automáticos de área/perímetro e integração cloud AWS.
+                        </p>
+                        
+                        <div class="project-tech">
+                            <span class="tech-tag">AWS Lambda</span>
+                            <span class="tech-tag">Leaflet.js</span>
+                            <span class="tech-tag">DynamoDB</span>
+                            <span class="tech-tag">Cognito</span>
+                            <span class="tech-tag">API Gateway</span>
+                            <span class="tech-tag">Turf.js</span>
+                        </div>
+                        
+                        <div class="project-actions">
+                            <button class="btn btn-primary" id="projectLoginBtn">Acessar Sistema</button>
                         </div>
                     </div>
-                    <div class="project-content">
-                        <h3 class="project-title">Sistema de Mapeamento de Propriedades Rurais</h3>
-                        <p class="project-description">
-                            Aplicação web completa para cadastro e gestão de propriedades rurais com 
-                            mapeamento interativo, cálculos automáticos de área e perímetro, integração 
-                            com AWS Cognito para autenticação.
-                        </p>
-                        <div class="project-tech">
-                            <span class="tech-tag">AWS Cognito</span>
-                            <span class="tech-tag">Leaflet.js</span>
-                            <span class="tech-tag">JavaScript</span>
-                            <span class="tech-tag">S3</span>
-                        </div>
-                        <div class="project-actions">
-                            <a href="projeto.html" class="btn btn-outline">Saber Mais</a>
-                            <button class="btn btn-primary" id="projectLoginBtn">Acessar Sistema</button>
+                    <div class="project-visual">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>🗺️ Demo Interativo</h3>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>✨ Recursos:</strong></p>
+                                <p>• Mapeamento com Leaflet.js</p>
+                                <p>• Cálculos geométricos precisos</p>
+                                <p>• Autenticação AWS Cognito</p>
+                                <p>• API Serverless completa</p>
+                                <p>• Interface responsiva</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -173,13 +155,13 @@
                     </div>
                     <div class="skill-card">
                         <div class="skill-icon">☁️</div>
-                        <h3>Cloud & Infraestrutura</h3>
-                        <p>AWS (Lambda, DynamoDB, S3), Terraform, GitHub Actions, Docker</p>
+                        <h3>Cloud & DevOps</h3>
+                        <p>AWS (Lambda, DynamoDB, S3, Cognito), Terraform, GitHub Actions, Docker</p>
                     </div>
                     <div class="skill-card">
                         <div class="skill-icon">🗄️</div>
-                        <h3>Databases</h3>
-                        <p>SQL, NoSQL (DynamoDB), Modelagem de dados, Pipeline de dados</p>
+                        <h3>Databases & APIs</h3>
+                        <p>SQL, NoSQL, REST APIs, Modelagem de dados, Pipeline de dados</p>
                     </div>
                     <div class="skill-card">
                         <div class="skill-icon">🎓</div>
@@ -196,13 +178,9 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h4>🌐 Conecte-se Comigo</h4>
-                    <a href="https://www.linkedin.com/in/lucas-bruzzone/" target="_blank" class="footer-link">
-                        LinkedIn
-                    </a>
-                    <a href="mailto:lucas.rbruzzone@gmail.com" class="footer-link">
-                        Email
-                    </a>
+                    <h4>🌐 Conecte-se</h4>
+                    <a href="https://www.linkedin.com/in/lucas-bruzzone/" target="_blank" class="footer-link">LinkedIn</a>
+                    <a href="mailto:lucas.rbruzzone@gmail.com" class="footer-link">Email</a>
                 </div>
                 <div class="footer-section">
                     <h4>📞 Contato</h4>
@@ -326,62 +304,58 @@
     <script src="js/main.js"></script>
 
     <style>
-        /* Google Button Standard Styling */
         .google-sso-section {
             margin-bottom: 1.5rem;
         }
 
-        .btn-google-standard {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            padding: 12px 16px;
-            background: white;
-            border: 1px solid #dadce0;
-            border-radius: 6px;
-            font-family: 'Google Sans', Roboto, sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            color: #3c4043;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        .confirmation-header {
+            text-align: center;
+            margin-bottom: var(--space-lg);
         }
 
-        .btn-google-standard:hover {
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-color: #dadce0;
-            background: #f8f9fa;
+        .confirmation-header h4 {
+            color: var(--primary);
+            margin-bottom: var(--space-sm);
+            font-size: 1.2rem;
         }
 
-        .btn-google-standard:active {
-            background: #f1f3f4;
-        }
-
-        .google-icon {
-            flex-shrink: 0;
-        }
-
-        .auth-divider {
-            display: flex;
-            align-items: center;
-            margin: 1.5rem 0;
-            color: var(--gray-500);
+        .confirmation-header p {
+            color: var(--gray-600);
             font-size: 0.9rem;
+            margin: 0;
         }
 
-        .auth-divider::before,
-        .auth-divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--gray-300);
+        .auth-switch {
+            text-align: center;
+            margin-top: var(--space-lg);
+            font-size: 0.9rem;
+            color: var(--gray-600);
         }
 
-        .auth-divider span {
-            padding: 0 1rem;
-            background: white;
+        .link-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: underline;
+            padding: 0;
+            font-size: inherit;
+        }
+
+        .link-btn:hover {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .hero-card .card-header {
+            background: var(--primary);
+            color: white;
+        }
+
+        .hero-card .card-header h3 {
+            color: white;
+            margin: 0;
         }
     </style>
 </body>

@@ -1,4 +1,4 @@
-// Configurações do Cognito
+// AWS Cognito Configuration
 const COGNITO_CONFIG = {
     region: 'us-east-1',
     userPoolId: 'us-east-1_EkIZzPSf0',
@@ -13,15 +13,9 @@ class CognitoAuth {
         this.refreshToken = localStorage.getItem('refreshToken');
         this.currentUsername = null;
         this.pendingConfirmationUsername = null;
-        
-        console.log('🚀 Auth constructor - tokens:', {
-            hasAccessToken: !!this.accessToken,
-            hasIdToken: !!this.idToken,
-            hasRefreshToken: !!this.refreshToken
-        });
     }
 
-    // Google SSO direto
+    // Google SSO
     signInWithGoogle() {
         const redirectUri = window.location.origin + '/callback.html';
         const url = `https://${COGNITO_CONFIG.domain}.auth.${COGNITO_CONFIG.region}.amazoncognito.com/oauth2/authorize?` +
@@ -29,12 +23,13 @@ class CognitoAuth {
             `response_type=code&` +
             `scope=email+openid+profile&` +
             `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-            `identity_provider=Google`;
+            `identity_provider=Google&` +
+            `prompt=select_account`;
         
         window.location.href = url;
     }
 
-    // Trocar código OAuth por tokens
+    // Exchange OAuth code for tokens
     async exchangeCodeForTokens(code) {
         const redirectUri = window.location.origin + '/callback.html';
         
@@ -59,23 +54,18 @@ class CognitoAuth {
                 this.idToken = data.id_token;
                 this.refreshToken = data.refresh_token;
                 
-                // Salvar tokens
                 localStorage.setItem('accessToken', this.accessToken);
                 localStorage.setItem('idToken', this.idToken);
                 localStorage.setItem('refreshToken', this.refreshToken);
                 
-                // Extrair username do token
                 const payload = JSON.parse(atob(this.idToken.split('.')[1]));
-                console.log('🎫 Token payload:', payload);
                 this.currentUsername = payload['cognito:username'] || payload.email || 'User';
-                console.log('👤 Username extracted:', this.currentUsername);
                 
                 return { success: true };
             } else {
                 throw new Error(`Token exchange failed: ${response.status}`);
             }
         } catch (error) {
-            console.error('Token exchange error:', error);
             return { success: false, error: error.message };
         }
     }
@@ -175,13 +165,9 @@ class CognitoAuth {
             this.idToken = data.AuthenticationResult.IdToken;
             this.refreshToken = data.AuthenticationResult.RefreshToken;
             
-            // Salvar tokens no localStorage
             localStorage.setItem('accessToken', this.accessToken);
             localStorage.setItem('idToken', this.idToken);
             localStorage.setItem('refreshToken', this.refreshToken);
-            
-            console.log('✅ Login successful, tokens saved');
-            console.log('🎫 ID Token payload:', JSON.parse(atob(this.idToken.split('.')[1])));
         }
         
         return data;
@@ -214,7 +200,6 @@ class CognitoAuth {
             this.idToken = data.AuthenticationResult.IdToken;
             this.refreshToken = data.AuthenticationResult.RefreshToken;
             
-            // Salvar tokens no localStorage
             localStorage.setItem('accessToken', this.accessToken);
             localStorage.setItem('idToken', this.idToken);
             localStorage.setItem('refreshToken', this.refreshToken);
@@ -224,7 +209,6 @@ class CognitoAuth {
     }
 
     signOut() {
-        // Limpar tokens
         this.accessToken = null;
         this.idToken = null;
         this.refreshToken = null;
@@ -235,26 +219,17 @@ class CognitoAuth {
         localStorage.removeItem('idToken');
         localStorage.removeItem('refreshToken');
         
-        console.log('🚪 User signed out, tokens cleared');
-        
-        // Redirecionar diretamente para home sem logout do Cognito
         window.location.href = '/';
     }
 
     isAuthenticated() {
-        const result = !!(this.accessToken || this.idToken);
-        console.log('🔐 isAuthenticated:', result);
-        return result;
+        return !!(this.accessToken || this.idToken);
     }
 
-    // Método para obter o token (preferindo idToken para APIs)
     getToken() {
-        const token = this.idToken || this.accessToken;
-        console.log('🎫 getToken called, returning:', token ? 'token present' : 'no token');
-        return token;
+        return this.idToken || this.accessToken;
     }
 
-    // Método para obter headers de autenticação
     getAuthHeaders() {
         const token = this.getToken();
         return {
@@ -263,80 +238,45 @@ class CognitoAuth {
         };
     }
 
-    // Método para verificar se o token está válido (básico)
     isTokenValid() {
         const token = this.getToken();
-        if (!token) {
-            console.log('❌ No token for validation');
-            return false;
-        }
+        if (!token) return false;
         
         try {
-            // Decodificar JWT para verificar expiração
             const payload = JSON.parse(atob(token.split('.')[1]));
             const now = Math.floor(Date.now() / 1000);
-            const isValid = payload.exp > now;
-            console.log('⏰ Token validation:', {
-                exp: payload.exp,
-                now: now,
-                isValid: isValid
-            });
-            return isValid;
+            return payload.exp > now;
         } catch (error) {
-            console.error('❌ Error validating token:', error);
             return false;
         }
     }
 
-    // Método para obter dados do usuário do token
     getUserInfo() {
-        console.log('📋 getUserInfo called');
         const token = this.getToken();
-        if (!token) {
-            console.log('❌ No token available for getUserInfo');
-            return null;
-        }
+        if (!token) return null;
         
         try {
             const payload = JSON.parse(atob(token.split('.')[1]));
-            console.log('🎫 Full token payload:', payload);
-            console.log('🔍 Available fields in payload:');
-            Object.keys(payload).forEach(key => {
-                console.log(`  - ${key}:`, payload[key]);
-            });
             
-            const userInfo = {
+            return {
                 username: payload['cognito:username'] || payload.email || 'User',
                 email: payload.email,
                 name: payload.name,
                 sub: payload.sub,
-                // Log all possible name fields
                 given_name: payload.given_name,
                 family_name: payload.family_name,
                 preferred_username: payload.preferred_username
             };
-            
-            console.log('👤 Extracted user info:', userInfo);
-            
-            // Determine what to use for initial - prioritize email over UUID username
-            let initialSource = userInfo.name || userInfo.email || userInfo.username || 'U';
-            console.log('🔤 Will use this for initial:', initialSource);
-            console.log('🔤 First character will be:', initialSource.charAt(0).toUpperCase());
-            
-            return userInfo;
         } catch (error) {
-            console.error('❌ Error extracting user data:', error);
             return null;
         }
     }
 
-    // Validar senha
     validatePassword(password) {
         const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
         return regex.test(password);
     }
 
-    // Refresh token automaticamente
     async refreshTokens() {
         if (!this.refreshToken) {
             throw new Error('No refresh token available');
@@ -369,12 +309,11 @@ class CognitoAuth {
                 throw new Error('Token refresh failed');
             }
         } catch (error) {
-            console.error('Token refresh error:', error);
             this.signOut();
             return false;
         }
     }
 }
 
-// Instância global
+// Global instance
 const auth = new CognitoAuth();
