@@ -70,40 +70,6 @@
                         <div class="stat-label">Km Perímetro</div>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon">📋</div>
-                    <div class="stat-content">
-                        <div class="stat-number" id="selectedCount">0</div>
-                        <div class="stat-label">Selecionadas</div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Quick Actions -->
-            <section class="actions-section">
-                <h2>Ações Rápidas</h2>
-                <div class="skills-grid">
-                    <div class="skill-card">
-                        <div class="skill-icon">🗺️</div>
-                        <h3>Novo Mapeamento</h3>
-                        <p>Desenhe uma nova propriedade no mapa interativo</p>
-                        <a href="mapeamento.html" class="btn btn-primary">Começar</a>
-                    </div>
-                    <div class="skill-card">
-                        <div class="skill-icon">📊</div>
-                        <h3>Gerar Relatório</h3>
-                        <p>Crie relatórios profissionais das propriedades selecionadas</p>
-                        <button class="btn btn-primary" id="generateReportBtn" disabled>
-                            📄 Gerar Relatório
-                        </button>
-                    </div>
-                    <div class="skill-card">
-                        <div class="skill-icon">📁</div>
-                        <h3>Importar CSV</h3>
-                        <p>Importe múltiplas propriedades via arquivo</p>
-                        <button class="btn btn-outline" disabled>Em Breve</button>
-                    </div>
-                </div>
             </section>
 
             <!-- Properties Management -->
@@ -123,6 +89,9 @@
                                     ❌ Limpar Seleção
                                 </button>
                                 <a href="mapeamento.html" class="btn btn-outline btn-small">Ver no Mapa</a>
+                                <button class="btn btn-primary btn-small" id="generateReportBtn" disabled>
+                                    📄 Gerar Relatório
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -137,35 +106,7 @@
                 </div>
             </section>
 
-            <!-- Selected Properties Summary -->
-            <section class="selected-summary hidden" id="selectedSummary">
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Propriedades Selecionadas para Relatório</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="selected-stats">
-                            <div class="selected-stat">
-                                <span class="stat-label">Total selecionadas:</span>
-                                <span class="stat-value" id="selectedTotal">0</span>
-                            </div>
-                            <div class="selected-stat">
-                                <span class="stat-label">Área total:</span>
-                                <span class="stat-value" id="selectedArea">0 ha</span>
-                            </div>
-                            <div class="selected-stat">
-                                <span class="stat-label">Perímetro total:</span>
-                                <span class="stat-value" id="selectedPerimeter">0 km</span>
-                            </div>
-                        </div>
-                        <div class="report-actions">
-                            <button class="btn btn-primary" id="confirmReportBtn">
-                                📄 Confirmar e Gerar Relatório
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
+
 
             <!-- System Info -->
             <section class="system-info">
@@ -242,8 +183,7 @@
                 document.getElementById('clearSelectionBtn').addEventListener('click', () => this.clearSelection());
                 
                 // Report generation
-                document.getElementById('generateReportBtn').addEventListener('click', () => this.showReportPreview());
-                document.getElementById('confirmReportBtn').addEventListener('click', () => this.generateReport());
+                document.getElementById('generateReportBtn').addEventListener('click', () => this.generateReport());
                 
                 // Property list events will be bound when properties are rendered
             }
@@ -329,7 +269,6 @@
                 document.getElementById('totalProperties').textContent = totalProperties;
                 document.getElementById('totalArea').textContent = totalArea.toFixed(1);
                 document.getElementById('totalPerimeter').textContent = (totalPerimeter / 1000).toFixed(1);
-                document.getElementById('selectedCount').textContent = selectedCount;
 
                 // Enable/disable report button
                 const reportBtn = document.getElementById('generateReportBtn');
@@ -402,7 +341,6 @@
                 }
                 
                 this.updateStats();
-                this.updateSelectedSummary();
             }
 
             selectAll() {
@@ -416,7 +354,6 @@
                 });
                 
                 this.updateStats();
-                this.updateSelectedSummary();
             }
 
             clearSelection() {
@@ -428,45 +365,6 @@
                 });
                 
                 this.updateStats();
-                this.updateSelectedSummary();
-            }
-
-            updateSelectedSummary() {
-                const summarySection = document.getElementById('selectedSummary');
-                const selectedCount = this.selectedProperties.size;
-                
-                if (selectedCount === 0) {
-                    summarySection.classList.add('hidden');
-                    return;
-                }
-                
-                summarySection.classList.remove('hidden');
-                
-                // Calculate totals for selected properties
-                const selectedProps = this.properties.filter(p => this.selectedProperties.has(p.id));
-                const totalArea = selectedProps.reduce((sum, p) => sum + p.area, 0);
-                const totalPerimeter = selectedProps.reduce((sum, p) => sum + p.perimeter, 0);
-                
-                document.getElementById('selectedTotal').textContent = selectedCount;
-                document.getElementById('selectedArea').textContent = `${totalArea.toFixed(1)} ha`;
-                document.getElementById('selectedPerimeter').textContent = `${(totalPerimeter / 1000).toFixed(1)} km`;
-            }
-
-            showReportPreview() {
-                if (this.selectedProperties.size === 0) {
-                    if (window.toast) {
-                        window.toast.show('Selecione pelo menos uma propriedade', 'warning');
-                    }
-                    return;
-                }
-                
-                this.updateSelectedSummary();
-                
-                // Scroll to summary
-                document.getElementById('selectedSummary').scrollIntoView({ 
-                    behavior: 'smooth',
-                    block: 'center'
-                });
             }
 
             async generateReport() {
@@ -474,14 +372,14 @@
                 
                 if (selectedProps.length === 0) {
                     if (window.toast) {
-                        window.toast.show('Nenhuma propriedade selecionada', 'error');
+                        window.toast.show('Selecione pelo menos uma propriedade', 'warning');
                     }
                     return;
                 }
 
-                const confirmBtn = document.getElementById('confirmReportBtn');
-                confirmBtn.disabled = true;
-                confirmBtn.textContent = '⏳ Gerando relatório...';
+                const reportBtn = document.getElementById('generateReportBtn');
+                reportBtn.disabled = true;
+                reportBtn.textContent = '⏳ Gerando relatório...';
 
                 try {
                     // Chamar API Lambda para gerar PDF
@@ -518,8 +416,10 @@
                         window.toast.show(`Erro ao gerar relatório: ${error.message}`, 'error');
                     }
                 } finally {
-                    confirmBtn.disabled = false;
-                    confirmBtn.textContent = '📄 Confirmar e Gerar Relatório';
+                    reportBtn.disabled = false;
+                    const selectedCount = this.selectedProperties.size;
+                    reportBtn.textContent = selectedCount > 0 ? 
+                        `📄 Gerar Relatório (${selectedCount})` : '📄 Gerar Relatório';
                 }
             }
 
